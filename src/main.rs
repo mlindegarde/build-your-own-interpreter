@@ -23,6 +23,7 @@ fn main() {
                 panic!("Scanner not implemented");
             } else {
                 println!("EOF null"); // Placeholder, remove this line when implementing the scanner
+            }
         }
         _ => {
             writeln!(io::stderr(), "Unknown command: {}", command).unwrap();
