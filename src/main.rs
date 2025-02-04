@@ -1,11 +1,16 @@
+mod scanner;
+mod token;
+
 use std::env;
 use std::fs;
 use std::io::{self, Write};
 
+use crate::scanner::Scanner;
+
 fn main() {
     let args: Vec<String> = env::args().collect();
     if args.len() < 3 {
-        writeln!(io::stderr(), "Usage: {} tokenize <filename>", args[0]).unwrap();
+        eprintln!("Usage: {} tokenize <filename>", args[0]);
         return;
     }
 
@@ -13,21 +18,29 @@ fn main() {
     let filename = &args[2];
 
     match command.as_str() {
-        "tokenize" => {
-            let file_contents = fs::read_to_string(filename).unwrap_or_else(|_| {
-                writeln!(io::stderr(), "Failed to read file {}", filename).unwrap();
-                String::new()
-            });
-
-            if !file_contents.is_empty() {
-                panic!("Scanner not implemented");
-            } else {
-                println!("EOF  null"); // Placeholder, remove this line when implementing the scanner
-            }
-        }
+        "tokenize" => tokenize(filename),
         _ => {
-            writeln!(io::stderr(), "Unknown command: {}", command).unwrap();
-            return;
+            eprintln!("Unknown command: {}", command);
         }
+    }
+}
+
+fn tokenize(filename: &str) {
+    let file_contents = fs::read_to_string(filename).unwrap_or_else(|_| {
+        eprint!("Failed to read file {}", filename);
+        String::new()
+    });
+
+
+
+    if !file_contents.is_empty() {
+        let scanner = Scanner::new(file_contents);
+        let tokens = scanner.scan_tokens();
+
+        for el in tokens {
+            println!("{}", el)
+        }
+    } else {
+        println!("EOF  null"); // Placeholder, remove this line when implementing the scanner
     }
 }
