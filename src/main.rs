@@ -1,11 +1,8 @@
-mod scanner;
-mod token;
+mod lexing;
 
 use std::env;
 use std::fs;
-use std::io::{self, Write};
-
-use crate::scanner::Scanner;
+use crate::lexing::scanning::Scanner;
 
 fn main() {
     let args: Vec<String> = env::args().collect();

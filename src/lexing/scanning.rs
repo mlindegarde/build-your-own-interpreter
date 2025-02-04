@@ -1,9 +1,8 @@
-use crate::token;
-use crate::token::TokenType::EOF;
+use crate::lexing::tokenizing::{Token, TokenType};
 
 pub struct Scanner {
     source: String,
-    tokens: Vec<token::Token>
+    tokens: Vec<Token>
 }
 
 impl Scanner {
@@ -14,8 +13,8 @@ impl Scanner {
         }
     }
 
-    pub fn scan_tokens(mut self) -> Vec<token::Token> {
-        self.tokens.push(token::Token::new(EOF, String::new(), 1));
+    pub fn scan_tokens(mut self) -> Vec<Token> {
+        self.tokens.push(Token::new(TokenType::EOF, String::new(), 1));
         self.tokens
     }
 }
