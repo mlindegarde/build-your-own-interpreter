@@ -26,7 +26,7 @@ impl Scanner {
             self.scan_token();
         }
 
-        self.add_token(TokenType::EOF);
+        self.add_token(TokenType::Eof);
         &self.tokens
     }
 
@@ -38,16 +38,16 @@ impl Scanner {
         let current_char = self.advance();
 
         match current_char {
-            '(' => self.add_token(TokenType::LEFT_PAREN),
-            ')' => self.add_token(TokenType::RIGHT_PAREN),
-            '{' => self.add_token(TokenType::LEFT_BRACE),
-            '}' => self.add_token(TokenType::RIGHT_BRACE),
-            ',' => self.add_token(TokenType::COMMA),
-            '.' => self.add_token(TokenType::DOT),
-            '-' => self.add_token(TokenType::MINUS),
-            '+' => self.add_token(TokenType::PLUS),
-            ';' => self.add_token(TokenType::SEMICOLON),
-            '*' => self.add_token(TokenType::STAR),
+            '(' => self.add_token(TokenType::LeftParen),
+            ')' => self.add_token(TokenType::RightParen),
+            '{' => self.add_token(TokenType::LeftBrace),
+            '}' => self.add_token(TokenType::RightBrace),
+            ',' => self.add_token(TokenType::Comma),
+            '.' => self.add_token(TokenType::Dot),
+            '-' => self.add_token(TokenType::Minus),
+            '+' => self.add_token(TokenType::Plus),
+            ';' => self.add_token(TokenType::Semicolon),
+            '*' => self.add_token(TokenType::Star),
             _ => self.handle_error(current_char)
         }
     }
@@ -67,8 +67,7 @@ impl Scanner {
         self.tokens.push(
             Token::new(
                 token,
-                self.source[self.start_car as usize..self.current_char as usize].to_string(),
-                self.current_line));
+                self.source[self.start_car as usize..self.current_char as usize].to_string()));
 
         self.start_car = self.current_char;
     }

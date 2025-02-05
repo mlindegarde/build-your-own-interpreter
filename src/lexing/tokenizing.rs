@@ -1,38 +1,51 @@
 use std::fmt;
+use crate::util::string_util;
 
 #[derive(Debug)]
 pub enum TokenType {
-    LEFT_PAREN,
-    RIGHT_PAREN,
-    LEFT_BRACE,
-    RIGHT_BRACE,
-    COMMA,
-    DOT,
-    MINUS,
-    PLUS,
-    SEMICOLON,
-    STAR,
-    EOF
+    LeftParen,
+    RightParen,
+    LeftBrace,
+    RightBrace,
+    Comma,
+    Dot,
+    Minus,
+    Plus,
+    Semicolon,
+    Star,
+    Eof
 }
 
 impl fmt::Display for TokenType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{:?}", self)
+        let token_type_as_string = format!("{:?}", self);
+        write!(f, "{}", string_util::pascal_to_upper_case_snake(&token_type_as_string))
+    }
+}
+
+#[cfg(test)]
+mod token_type_tests {
+    use super::*;
+
+    #[test]
+    fn should_convert_enum_name_to_upper_snake_case() {
+        let token_type = TokenType::LeftParen;
+        let token_type_as_string = format!("{}", token_type);
+
+        assert_eq!(token_type_as_string, "LEFT_PAREN");
     }
 }
 
 pub struct Token {
     token_type: TokenType,
     lexeme: String,
-    line: u16
 }
 
 impl Token {
-    pub fn new(token_type: TokenType, lexeme: String, line: u16) -> Self {
+    pub fn new(token_type: TokenType, lexeme: String) -> Self {
         Token {
             token_type,
-            lexeme,
-            line
+            lexeme
         }
     }
 }

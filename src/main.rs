@@ -1,4 +1,5 @@
 mod lexing;
+mod util;
 
 use std::env;
 use std::fs;
