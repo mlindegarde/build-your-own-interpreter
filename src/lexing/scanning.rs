@@ -51,6 +51,7 @@ impl Scanner {
             _ => {
                 eprintln!("[line {}] Error: Unexpected character: {}", self.current_line, current_char);
                 self.had_error = true;
+                self.start_car = self.current_char;
             }
         }
     }
