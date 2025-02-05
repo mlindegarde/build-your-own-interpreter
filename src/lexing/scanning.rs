@@ -41,6 +41,7 @@ impl Scanner {
             '-' => self.add_token(TokenType::MINUS),
             '+' => self.add_token(TokenType::PLUS),
             ';' => self.add_token(TokenType::SEMICOLON),
+            '*' => self.add_token(TokenType::STAR),
             _ => {
                 eprint!("Unknown character: {}", current_char);
             }
