@@ -3,19 +3,20 @@ use crate::util::string_util;
 
 #[derive(Debug)]
 pub enum TokenType {
-    LeftParen,
-    RightParen,
-    LeftBrace,
-    RightBrace,
+    LeftParen, RightParen,
+    LeftBrace, RightBrace,
     Comma,
     Dot,
-    Minus,
-    Plus,
+    Minus, Plus,
     Semicolon,
     Star,
     Eof
 }
 
+/// Displays the string value for the enum after converting it to upper snake case:
+/// ```
+/// LeftBrace -> LEFT_BRACE
+/// ```
 impl fmt::Display for TokenType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let token_type_as_string = format!("{:?}", self);

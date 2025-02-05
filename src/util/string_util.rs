@@ -1,5 +1,11 @@
 use regex::Regex;
 
+/// CodeCrafters wants the output of the TokenType enum to be in UPPER_SNAKE_CASE; however,
+/// Rust seems to want enums to use PascalCase.  To fix this, this simple method will convert
+/// Pascal to upper snake case, ex:
+/// ```
+/// ExampleValue -> EXAMPLE_VALUE
+/// ```
 pub fn pascal_to_upper_case_snake(input: &String) -> String {
     let regex =  Regex::new("[A-Z][a-z]+");
 
