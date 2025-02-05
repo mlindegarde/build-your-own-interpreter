@@ -48,8 +48,17 @@ impl Scanner {
             '+' => self.add_token(TokenType::Plus),
             ';' => self.add_token(TokenType::Semicolon),
             '*' => self.add_token(TokenType::Star),
+            '!' => self.add_token_based_on_lookahead('=', TokenType::BangEqual, TokenType::Bang),
+            '=' => self.add_token_based_on_lookahead('=', TokenType::EqualEqual, TokenType::Equal),
+            '<' => self.add_token_based_on_lookahead('=', TokenType::LessEqual, TokenType::Less ),
+            '>' => self.add_token_based_on_lookahead('=', TokenType::GreaterEqual, TokenType::Greater),
             _ => self.handle_error(current_char)
         }
+    }
+
+    fn add_token_based_on_lookahead(&mut self, expected_char: char, match_token_type: TokenType, else_token_type: TokenType) {
+        let is_match = self.match_char(expected_char);
+        self.add_token(if is_match { match_token_type } else { else_token_type });
     }
 
     fn advance(&mut self) -> char {
@@ -57,6 +66,23 @@ impl Scanner {
         self.current_char += 1;
 
         value
+    }
+
+    fn match_char(&mut self, expected: char) -> bool {
+        if self.is_at_end() {
+            return false;
+        }
+
+        match self.source.chars().nth(self.current_char as usize) {
+            Some(value) =>
+                if value == expected {
+                    self.current_char += 1;
+                    true
+                } else { false },
+            None => {
+                false
+            }
+        }
     }
 
     fn is_at_end(&self) -> bool {

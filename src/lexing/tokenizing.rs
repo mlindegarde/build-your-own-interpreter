@@ -10,6 +10,10 @@ pub enum TokenType {
     Minus, Plus,
     Semicolon,
     Star,
+    Bang, BangEqual,
+    Equal, EqualEqual,
+    Less, LessEqual,
+    Greater, GreaterEqual,
     Eof
 }
 
