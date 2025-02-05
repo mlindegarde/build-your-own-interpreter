@@ -36,6 +36,11 @@ impl Scanner {
             ')' => self.add_token(TokenType::RIGHT_PAREN),
             '{' => self.add_token(TokenType::LEFT_BRACE),
             '}' => self.add_token(TokenType::RIGHT_BRACE),
+            ',' => self.add_token(TokenType::COMMA),
+            '.' => self.add_token(TokenType::DOT),
+            '-' => self.add_token(TokenType::MINUS),
+            '+' => self.add_token(TokenType::PLUS),
+            ';' => self.add_token(TokenType::SEMICOLON),
             _ => {
                 eprint!("Unknown character: {}", current_char);
             }
