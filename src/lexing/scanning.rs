@@ -5,6 +5,7 @@ pub struct Scanner {
     start_car: u16,
     current_char: u16,
     current_line: u16,
+    had_error: bool,
     tokens: Vec<Token>
 }
 
@@ -15,17 +16,22 @@ impl Scanner {
             start_car: 0,
             current_char: 0,
             current_line: 1,
+            had_error: false,
             tokens: Vec::new()
         }
     }
 
-    pub fn scan_tokens(mut self) -> Vec<Token> {
+    pub fn scan_tokens(&mut self) -> &Vec<Token> {
         while !self.is_at_end() {
             self.scan_token();
         }
 
         self.add_token(TokenType::EOF);
-        self.tokens
+        &self.tokens
+    }
+
+    pub fn has_error(&self) -> bool {
+        self.had_error
     }
 
     fn scan_token(&mut self) {
@@ -43,7 +49,8 @@ impl Scanner {
             ';' => self.add_token(TokenType::SEMICOLON),
             '*' => self.add_token(TokenType::STAR),
             _ => {
-                eprint!("Unknown character: {}", current_char);
+                eprintln!("[line {}] Error: Unexpected character: {}", self.current_line, current_char);
+                self.had_error = true;
             }
         }
     }

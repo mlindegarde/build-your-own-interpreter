@@ -24,18 +24,20 @@ fn main() {
 
 fn tokenize(filename: &str) {
     let file_contents = fs::read_to_string(filename).unwrap_or_else(|_| {
-        eprint!("Failed to read file {}", filename);
+        eprintln!("Failed to read file {}", filename);
         String::new()
     });
 
-
-
     if !file_contents.is_empty() {
-        let scanner = Scanner::new(file_contents);
+        let mut scanner = Scanner::new(file_contents);
         let tokens = scanner.scan_tokens();
 
         for el in tokens {
             println!("{}", el)
+        }
+
+        if scanner.has_error() {
+            std::process::exit(65);
         }
     } else {
         println!("EOF  null"); // Placeholder, remove this line when implementing the scanner
