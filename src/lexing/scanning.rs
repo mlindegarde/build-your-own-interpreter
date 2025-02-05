@@ -48,11 +48,7 @@ impl Scanner {
             '+' => self.add_token(TokenType::PLUS),
             ';' => self.add_token(TokenType::SEMICOLON),
             '*' => self.add_token(TokenType::STAR),
-            _ => {
-                eprintln!("[line {}] Error: Unexpected character: {}", self.current_line, current_char);
-                self.had_error = true;
-                self.start_car = self.current_char;
-            }
+            _ => self.handle_error(current_char)
         }
     }
 
@@ -74,6 +70,12 @@ impl Scanner {
                 self.source[self.start_car as usize..self.current_char as usize].to_string(),
                 self.current_line));
 
+        self.start_car = self.current_char;
+    }
+
+    fn handle_error(&mut self, current_char: char) {
+        eprintln!("[line {}] Error: Unexpected character: {}", self.current_line, current_char);
+        self.had_error = true;
         self.start_car = self.current_char;
     }
 }
