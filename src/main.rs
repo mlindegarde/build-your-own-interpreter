@@ -52,7 +52,7 @@ impl FromStr for Command {
     }
 }
 
-fn validate_input(args: &Vec<String>) -> Result<(Command,&String), ValidationError>{
+fn validate_input(args: &[String]) -> Result<(Command,&String), ValidationError>{
     if args.len() != 3 {
         return Err(ValidationError::ArgumentCount { expected: 3, actual: args.len() });
     }
@@ -95,7 +95,7 @@ fn handle_error(error: ValidationError) {
 }
 
 fn main() {
-    match validate_input(&env::args().collect()) {
+    match validate_input(&env::args().collect::<Vec<String>>()) {
         Err(error) => handle_error(error),
         Ok((command, filename)) => execute_command(&command, filename)
     }
