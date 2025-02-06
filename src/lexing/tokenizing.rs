@@ -33,7 +33,10 @@ impl fmt::Display for TokenType {
 
 impl PartialEq for TokenType {
     fn eq(&self, other: &Self) -> bool {
-        self.to_string() == other.to_string()
+        // This compares the enum variant, but not the data.  This is more efficient than using
+        // string based comparison as it avoids the extra allocation.  I don't really care what
+        // the data is for this comparison, just the variant type.
+        std::mem::discriminant(self) == std::mem::discriminant(other)
     }
 }
 
