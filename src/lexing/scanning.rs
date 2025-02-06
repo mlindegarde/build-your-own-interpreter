@@ -105,7 +105,9 @@ impl Scanner {
     }
 
     fn is_at_end(&self) -> bool {
-        self.current_char >= self.source.len() as u16
+        // Interesting discovery, self.source.len() assumes 8 bit characters and does not
+        // properly count the length in Unicode characters are in the string.
+        self.current_char >= self.source.chars().count() as u16
     }
 
     fn add_token(&mut self, token_type: TokenType) {
