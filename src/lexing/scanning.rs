@@ -27,7 +27,8 @@ impl Scanner {
             self.scan_token();
         }
 
-        self.add_token(TokenType::Eof);
+        //self.tokens.push(Token::new(TokenType::Eof, String::from(""), self.current_line));
+        self.add_token_with_literal(TokenType::Eof, String::new());
         &self.tokens
     }
 
@@ -107,11 +108,29 @@ impl Scanner {
         self.current_char >= self.source.len() as u16
     }
 
-    fn add_token(&mut self, token: TokenType) {
+    fn add_token(&mut self, token_type: TokenType) {
+        /*
         self.tokens.push(
             Token::new(
                 token,
                 self.source[self.start_car as usize..self.current_char as usize].to_string(),
+                self.current_line));
+
+        self.start_car = self.current_char;
+
+         */
+
+        self.add_token_with_literal(
+            token_type,
+            self.source[self.start_car as usize..self.current_char as usize].to_string()
+        )
+    }
+
+    fn add_token_with_literal(&mut self, token_type: TokenType, lexeme: String) {
+        self.tokens.push(
+            Token::new(
+                token_type,
+                lexeme,
                 self.current_line));
 
         self.start_car = self.current_char;

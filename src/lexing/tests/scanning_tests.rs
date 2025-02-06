@@ -43,6 +43,18 @@ fn should_skip_comment_when_input_contains_them() {
 }
 
 #[test]
+fn should_not_include_comment_value_in_lexeme_if_at_end_of_input() {
+    let mut scanner = Scanner::new(String::from("//Comment"));
+    let tokens = scanner.scan_tokens();
+    let token = tokens.first().unwrap();
+
+    assert_eq!(tokens.len(), 1);
+    assert_eq!(token.token_type, TokenType::Eof);
+    assert_eq!(token.lexeme, String::from(""));
+    assert_eq!(token.line, 1);
+}
+
+#[test]
 fn should_return_slash_when_not_part_of_comment() {
     assert_eq!(
         get_token_types_for("/*"),
