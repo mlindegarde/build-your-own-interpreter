@@ -2,6 +2,8 @@ use std::{fmt, fs};
 use crate::lexing::scanning::Scanner;
 use crate::util::string_util;
 
+//* TOKEN TYPES ***********************************************************************************/
+
 #[derive(Debug, Clone, Copy)]
 pub enum TokenType {
     LeftParen, RightParen,
@@ -37,6 +39,8 @@ impl PartialEq for TokenType {
 
 impl Eq for TokenType {}
 
+//* TOKEN AND TOKEN IMPLEMENTATION ****************************************************************/
+
 #[derive(Debug)]
 pub struct Token {
     pub token_type: TokenType,
@@ -59,6 +63,8 @@ impl fmt::Display for Token {
         write!(f, "{} {} null", &self.token_type, &self.lexeme)
     }
 }
+
+//* TOKENIZING COMMAND LOGIC **********************************************************************/
 
 pub fn tokenize(filename: &str) {
     let file_contents = fs::read_to_string(filename).unwrap_or_else(|_| {

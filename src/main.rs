@@ -8,26 +8,30 @@ use std::str::FromStr;
 extern crate exitcode;
 use crate::lexing::tokenizing::tokenize;
 
+//** VALIDATION ERRORS *****************************************************************************
+
 enum ValidationError {
-    InvalidArgumentCount { expected: usize, actual: usize },
-    InvalidCommand { provided_command: String },
-    InvalidFilename { provided_filename: String }
+    ArgumentCount { expected: usize, actual: usize },
+    Command { provided_command: String },
+    Filename { provided_filename: String }
 }
 
 impl fmt::Display for ValidationError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            ValidationError::InvalidArgumentCount { expected, actual } =>
+            ValidationError::ArgumentCount { expected, actual } =>
                 write!(f, "Expected {} arguments, but received {}.", expected, actual),
 
-            ValidationError::InvalidCommand { provided_command } =>
+            ValidationError::Command { provided_command } =>
                 write!(f, "Invalid command: {}", provided_command),
 
-            ValidationError::InvalidFilename { provided_filename } =>
+            ValidationError::Filename { provided_filename } =>
                 write!(f, "Invalid filename: {}", provided_filename)
         }
     }
 }
+
+//** COMMANDS **************************************************************************************
 
 enum Command {
     Tokenize
@@ -43,30 +47,26 @@ impl FromStr for Command {
     fn from_str(input: &str) -> Result<Command, ValidationError> {
         match input.to_lowercase().as_str() {
             "tokenize" => Ok(Command::Tokenize),
-            _ => Err(ValidationError::InvalidCommand { provided_command: input.to_string()})
+            _ => Err(ValidationError::Command { provided_command: input.to_string()})
         }
     }
 }
 
 fn validate_input(args: &Vec<String>) -> Result<(Command,&String), ValidationError>{
     if args.len() != 3 {
-        return Err(ValidationError::InvalidArgumentCount { expected: 3, actual: args.len() });
+        return Err(ValidationError::ArgumentCount { expected: 3, actual: args.len() });
     }
 
-    let command =
-        match Command::from_str(&args[1]) {
-            Ok(command) => command,
-            Err(error) => return Err(error)
-        };
+    // The '?' operator is interesting.  Unpacks the Result if Ok, otherwise it will return
+    // the Err.
+    let command = Command::from_str(&args[1])?;
 
-    /*
-      Nice that pattern matching is a bit more robust than it is in Java.  Closer to what you
-      can do in F#.
-     */
+    // Nice that pattern matching is a bit more robust than it is in Java.  Closer to what you
+    // can do in F#.
     let filename =
         match fs::metadata(&args[2]) {
             Ok(metadata) if metadata.is_file() => &args[2],
-            _ => return Err(ValidationError::InvalidFilename {
+            _ => return Err(ValidationError::Filename {
                 provided_filename: args[2].to_string()
             })
         };
@@ -74,7 +74,9 @@ fn validate_input(args: &Vec<String>) -> Result<(Command,&String), ValidationErr
     Ok((command, filename))
 }
 
-fn execute_command(command: &Command, filename: &String) {
+//** EXECUTION LOGIC *******************************************************************************
+
+fn execute_command(command: &Command, filename: &str) {
     match command {
         Command::Tokenize => tokenize(filename)
     }
@@ -85,9 +87,9 @@ fn handle_error(error: ValidationError) {
 
     std::process::exit(
         match error {
-            ValidationError::InvalidArgumentCount { .. } => exitcode::USAGE,
-            ValidationError::InvalidCommand { .. } => exitcode::USAGE,
-            ValidationError::InvalidFilename { .. } => exitcode::IOERR
+            ValidationError::ArgumentCount { .. } => exitcode::USAGE,
+            ValidationError::Command { .. } => exitcode::USAGE,
+            ValidationError::Filename { .. } => exitcode::IOERR
         }
     )
 }
