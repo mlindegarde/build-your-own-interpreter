@@ -73,6 +73,14 @@ fn should_handle_empty_space_when_file_contains_it() {
     assert_eq!(tokens.iter().nth(2).unwrap().line, 4);
 }
 
+#[test]
+fn should_handle_unicode_if_in_input() {
+    assert_eq!(
+        get_token_types_for("(///Unicode:£§᯽☺♣)"),
+        vec![TokenType::Eof]
+    );
+}
+
 fn get_token_types_for(input: &str) -> Vec<TokenType> {
     Scanner::new(String::from(input)).scan_tokens()
         .iter()
