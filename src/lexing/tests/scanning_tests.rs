@@ -1,5 +1,7 @@
 use crate::lexing::scanning::Scanner;
-use crate::lexing::tokenizing::TokenType;
+use crate::lexing::tokenizing::{ TokenType, Token };
+
+static EMPTY_TOKEN_LIST: Vec<Token> = Vec::new();
 
 #[test]
 fn should_return_eof_token_when_input_is_empty() {
@@ -20,9 +22,9 @@ fn should_return_parenthesis_and_bracket_tokens_when_input_contains_them() {
 #[test]
 fn has_error_should_return_true_when_input_contains_errors() {
     let mut scanner = Scanner::new(String::from("|"));
-    scanner.scan_tokens();
+    let result = scanner.scan_tokens();
 
-    assert!(scanner.has_error());
+    assert!(result.is_err());
 }
 
 #[test]
@@ -45,7 +47,7 @@ fn should_skip_comment_when_input_contains_them() {
 #[test]
 fn should_not_include_comment_value_in_lexeme_if_at_end_of_input() {
     let mut scanner = Scanner::new(String::from("//Comment"));
-    let tokens = scanner.scan_tokens();
+    let tokens = scanner.scan_tokens().unwrap_or(&EMPTY_TOKEN_LIST);
     let token = tokens.first().unwrap();
 
     assert_eq!(tokens.len(), 1);
@@ -65,7 +67,7 @@ fn should_return_slash_when_not_part_of_comment() {
 #[test]
 fn should_handle_empty_space_when_file_contains_it() {
     let mut scanner = Scanner::new(String::from(" \n\r\t\t(\n(\n"));
-    let tokens = scanner.scan_tokens();
+    let tokens = scanner.scan_tokens().unwrap_or(&EMPTY_TOKEN_LIST);
 
     assert_eq!(tokens.len(), 3);
     assert_eq!(tokens.first().unwrap().lexeme, String::from("("));
@@ -82,7 +84,7 @@ fn should_handle_unicode_if_in_input() {
 }
 
 fn get_token_types_for(input: &str) -> Vec<TokenType> {
-    Scanner::new(String::from(input)).scan_tokens()
+    Scanner::new(String::from(input)).scan_tokens().unwrap_or(&Vec::new())
         .iter()
         .map(|token| token.token_type)
         .collect()
