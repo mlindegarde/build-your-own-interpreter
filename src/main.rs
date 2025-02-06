@@ -4,6 +4,7 @@ mod util;
 use std::{env, fmt};
 use std::fs;
 use std::str::FromStr;
+use exitcode::ExitCode;
 
 extern crate exitcode;
 use crate::lexing::tokenizing::tokenize_file;
@@ -76,27 +77,26 @@ fn validate_input(args: &[String]) -> Result<(Command,&String), ValidationError>
 
 //** EXECUTION LOGIC *******************************************************************************
 
-fn execute_command(command: &Command, filename: &str) {
+fn execute_command(command: &Command, filename: &str) -> ExitCode {
     match command {
         Command::Tokenize => tokenize_file(filename)
     }
 }
 
-fn handle_error(error: ValidationError) {
+fn handle_error(error: ValidationError) -> ExitCode {
     eprintln!("{}", error);
 
-    std::process::exit(
-        match error {
-            ValidationError::ArgumentCount { .. } => exitcode::USAGE,
-            ValidationError::Command { .. } => exitcode::USAGE,
-            ValidationError::Filename { .. } => exitcode::IOERR
-        }
-    )
+    match error {
+        ValidationError::ArgumentCount { .. } => exitcode::USAGE,
+        ValidationError::Command { .. } => exitcode::USAGE,
+        ValidationError::Filename { .. } => exitcode::IOERR
+    }
 }
 
 fn main() {
-    match validate_input(&env::args().collect::<Vec<String>>()) {
-        Err(error) => handle_error(error),
-        Ok((command, filename)) => execute_command(&command, filename)
-    }
+    std::process::exit(
+        match validate_input(&env::args().collect::<Vec<String>>()) {
+            Err(error) => handle_error(error),
+            Ok((command, filename)) => execute_command(&command, filename)
+        });
 }

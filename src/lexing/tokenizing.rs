@@ -1,4 +1,5 @@
 use std::{fmt, fs};
+use exitcode::ExitCode;
 use crate::lexing::scanning::{ScanningError, Scanner};
 use crate::util::string_util;
 
@@ -82,18 +83,21 @@ fn display_errors(errors: &[ScanningError]) {
     }
 }
 
-pub fn tokenize_file(filename: &str) {
+pub fn tokenize_file(filename: &str) -> ExitCode {
     let file_contents = fs::read_to_string(filename).unwrap_or_else(|_| {
         eprintln!("Failed to read file {}:  Defaulting to an empty string", filename);
         String::new()
     });
 
     match Scanner::new(file_contents).scan_tokens() {
-        Ok(tokens) => display_tokens(tokens),
+        Ok(tokens) => {
+            display_tokens(tokens);
+            exitcode::OK
+        },
         Err((tokens, errors)) => {
             display_errors(errors);
             display_tokens(tokens);
-            std::process::exit(exitcode::DATAERR);
+            exitcode::DATAERR
         }
     }
 }
