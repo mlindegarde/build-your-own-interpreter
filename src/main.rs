@@ -29,18 +29,14 @@ fn tokenize(filename: &str) {
         String::new()
     });
 
-    if !file_contents.is_empty() {
-        let mut scanner = Scanner::new(file_contents);
-        let tokens = scanner.scan_tokens();
+    let mut scanner = Scanner::new(file_contents);
+    let tokens = scanner.scan_tokens();
 
-        for el in tokens {
-            println!("{}", el)
-        }
+    for el in tokens {
+        println!("{}", el)
+    }
 
-        if scanner.has_error() {
-            std::process::exit(65);
-        }
-    } else {
-        println!("EOF  null"); // Placeholder, remove this line when implementing the scanner
+    if scanner.has_error() {
+        std::process::exit(65);
     }
 }

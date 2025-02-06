@@ -9,7 +9,7 @@ pub enum TokenType {
     Dot,
     Minus, Plus,
     Semicolon,
-    Star,
+    Star, Slash,
     Bang, BangEqual,
     Equal, EqualEqual,
     Less, LessEqual,
@@ -36,30 +36,19 @@ impl PartialEq for TokenType {
 
 impl Eq for TokenType {}
 
-#[cfg(test)]
-mod token_type_tests {
-    use super::*;
-
-    #[test]
-    fn should_convert_enum_name_to_upper_snake_case() {
-        let token_type = TokenType::LeftParen;
-        let token_type_as_string = format!("{}", token_type);
-
-        assert_eq!(token_type_as_string, "LEFT_PAREN");
-    }
-}
-
 #[derive(Debug)]
 pub struct Token {
     pub token_type: TokenType,
-    lexeme: String,
+    pub lexeme: String,
+    pub line: u16
 }
 
 impl Token {
-    pub fn new(token_type: TokenType, lexeme: String) -> Self {
+    pub fn new(token_type: TokenType, lexeme: String, line: u16) -> Self {
         Token {
             token_type,
-            lexeme
+            lexeme,
+            line
         }
     }
 }
