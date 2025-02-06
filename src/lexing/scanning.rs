@@ -54,14 +54,11 @@ impl Scanner {
         }
 
         match self.source.chars().nth(self.current_char as usize) {
-            Some(value) =>
-                if value == expected {
-                    self.current_char += 1;
-                    true
-                } else { false },
-            None => {
-                false
-            }
+            Some(value) if value == expected => {
+                self.current_char += 1;
+                true
+            },
+            Some(_) | None => false
         }
     }
 
@@ -86,11 +83,6 @@ impl Scanner {
         )
     }
 
-    fn add_token_based_on_lookahead(&mut self, expected_char: char, match_token_type: TokenType, else_token_type: TokenType) {
-        let is_match = self.match_char(expected_char);
-        self.add_token(if is_match { match_token_type } else { else_token_type });
-    }
-
     fn add_token_with_literal(&mut self, token_type: TokenType, lexeme: String) {
         self.tokens.push(
             Token::new(
@@ -101,14 +93,16 @@ impl Scanner {
         self.start_car = self.current_char;
     }
 
+    fn add_token_using_lookahead(&mut self, expected_char: char, match_token_type: TokenType, else_token_type: TokenType) {
+        let is_match = self.match_char(expected_char);
+        self.add_token(if is_match { match_token_type } else { else_token_type });
+    }
+
     fn handle_error(&mut self, current_char: char) {
-        let error = ScanningError::UnexpectedCharacter {
+        self.errors.push(ScanningError::UnexpectedCharacter {
             line: self.current_line,
-            character: current_char };
+            character: current_char });
 
-
-
-        self.errors.push(error);
         self.start_car = self.current_char;
     }
 
@@ -126,10 +120,10 @@ impl Scanner {
             '+' => self.add_token(TokenType::Plus),
             ';' => self.add_token(TokenType::Semicolon),
             '*' => self.add_token(TokenType::Star),
-            '!' => self.add_token_based_on_lookahead('=', TokenType::BangEqual, TokenType::Bang),
-            '=' => self.add_token_based_on_lookahead('=', TokenType::EqualEqual, TokenType::Equal),
-            '<' => self.add_token_based_on_lookahead('=', TokenType::LessEqual, TokenType::Less),
-            '>' => self.add_token_based_on_lookahead('=', TokenType::GreaterEqual, TokenType::Greater),
+            '!' => self.add_token_using_lookahead('=', TokenType::BangEqual, TokenType::Bang),
+            '=' => self.add_token_using_lookahead('=', TokenType::EqualEqual, TokenType::Equal),
+            '<' => self.add_token_using_lookahead('=', TokenType::LessEqual, TokenType::Less),
+            '>' => self.add_token_using_lookahead('=', TokenType::GreaterEqual, TokenType::Greater),
             '/' => {
                 if self.match_char('/') {
                     while self.peek() != '\n' && !self.is_at_end_of_input() { self.advance(); }
@@ -137,7 +131,7 @@ impl Scanner {
                     self.add_token(TokenType::Slash)
                 }
             },
-            ' ' | '\r' | '\t' => {},
+            ' ' | '\r' | '\t' => { /* Just ignore these characters. */ },
             '\n' => self.current_line += 1,
             _ => self.handle_error(current_char)
         }
