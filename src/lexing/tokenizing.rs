@@ -1,5 +1,5 @@
 use std::{fmt, fs};
-use crate::lexing::scanning::Scanner;
+use crate::lexing::scanning::{ScanningError, Scanner};
 use crate::util::string_util;
 
 //* TOKEN TYPES ***********************************************************************************/
@@ -70,20 +70,30 @@ impl fmt::Display for Token {
 
 //* TOKENIZING COMMAND LOGIC **********************************************************************/
 
-pub fn tokenize(filename: &str) {
+fn display_tokens(tokens: &[Token]) {
+    for token in tokens {
+        println!("{}", token);
+    }
+}
+
+fn display_errors(errors: &[ScanningError]) {
+    for error in errors {
+        eprintln!("{}", error);
+    }
+}
+
+pub fn tokenize_file(filename: &str) {
     let file_contents = fs::read_to_string(filename).unwrap_or_else(|_| {
-        eprintln!("Failed to read file {}", filename);
+        eprintln!("Failed to read file {}:  Defaulting to an empty string", filename);
         String::new()
     });
 
-    let mut scanner = Scanner::new(file_contents);
-    let tokens = scanner.scan_tokens();
-
-    for el in tokens {
-        println!("{}", el)
-    }
-
-    if scanner.has_error() {
-        std::process::exit(exitcode::DATAERR);
+    match Scanner::new(file_contents).scan_tokens() {
+        Ok(tokens) => display_tokens(tokens),
+        Err((tokens, errors)) => {
+            display_errors(errors);
+            display_tokens(tokens);
+            std::process::exit(exitcode::DATAERR);
+        }
     }
 }

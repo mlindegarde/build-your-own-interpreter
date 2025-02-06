@@ -6,7 +6,7 @@ use std::fs;
 use std::str::FromStr;
 
 extern crate exitcode;
-use crate::lexing::tokenizing::tokenize;
+use crate::lexing::tokenizing::tokenize_file;
 
 //** VALIDATION ERRORS *****************************************************************************
 
@@ -78,7 +78,7 @@ fn validate_input(args: &[String]) -> Result<(Command,&String), ValidationError>
 
 fn execute_command(command: &Command, filename: &str) {
     match command {
-        Command::Tokenize => tokenize(filename)
+        Command::Tokenize => tokenize_file(filename)
     }
 }
 
