@@ -104,3 +104,54 @@ impl Scanner {
         self.start_car = self.current_char;
     }
 }
+
+#[cfg(test)]
+mod scanning_tests {
+    use super::*;
+
+    #[test]
+    fn should_return_eof_token_when_file_is_empty() {
+        let mut scanner = Scanner::new(String::new());
+        let token_types = get_token_types(scanner.scan_tokens());
+        let expected_token_types = vec![TokenType::Eof];
+
+        assert_eq!(token_types, expected_token_types);
+    }
+
+    #[test]
+    fn should_return_parenthesis_and_bracket_tokens_when_file_contains_them() {
+        let mut scanner = Scanner::new(String::from("({})"));
+        let token_types = get_token_types(scanner.scan_tokens());
+        let expected_token_types = vec![
+            TokenType::LeftParen, TokenType::LeftBrace,
+            TokenType::RightBrace, TokenType::RightParen,
+            TokenType::Eof];
+
+        assert_eq!(token_types, expected_token_types);
+    }
+
+    #[test]
+    fn has_error_should_return_true_when_file_contains_errors() {
+        let mut scanner = Scanner::new(String::from("|"));
+        scanner.scan_tokens();
+
+        assert!(scanner.has_error());
+    }
+
+    #[test]
+    fn sould_return_two_character_operators_when_file_contains_them() {
+        let mut scanner = Scanner::new(String::from("===<="));
+        let token_types = get_token_types(scanner.scan_tokens());
+        let expected_token_types = vec![
+            TokenType::EqualEqual, TokenType::Equal, TokenType::LessEqual, TokenType::Eof];
+
+        assert_eq!(token_types, expected_token_types);
+    }
+
+    fn get_token_types(tokens: &Vec<Token>) -> Vec<TokenType> {
+        tokens
+            .iter()
+            .map(|token| token.token_type)
+            .collect()
+    }
+}

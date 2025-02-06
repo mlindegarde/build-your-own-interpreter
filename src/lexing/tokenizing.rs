@@ -1,7 +1,7 @@
 use std::fmt;
 use crate::util::string_util;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum TokenType {
     LeftParen, RightParen,
     LeftBrace, RightBrace,
@@ -28,6 +28,14 @@ impl fmt::Display for TokenType {
     }
 }
 
+impl PartialEq for TokenType {
+    fn eq(&self, other: &Self) -> bool {
+        self.to_string() == other.to_string()
+    }
+}
+
+impl Eq for TokenType {}
+
 #[cfg(test)]
 mod token_type_tests {
     use super::*;
@@ -41,8 +49,9 @@ mod token_type_tests {
     }
 }
 
+#[derive(Debug)]
 pub struct Token {
-    token_type: TokenType,
+    pub token_type: TokenType,
     lexeme: String,
 }
 
