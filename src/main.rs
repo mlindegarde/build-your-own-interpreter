@@ -4,9 +4,9 @@ mod util;
 use std::{env, fmt};
 use std::fs;
 use std::str::FromStr;
-use crate::lexing::scanning::Scanner;
-use crate::ValidationError::InvalidCommand;
+
 extern crate exitcode;
+use crate::lexing::tokenizing::tokenize;
 
 enum ValidationError {
     InvalidArgumentCount { expected: usize, actual: usize },
@@ -43,7 +43,7 @@ impl FromStr for Command {
     fn from_str(input: &str) -> Result<Command, ValidationError> {
         match input.to_lowercase().as_str() {
             "tokenize" => Ok(Command::Tokenize),
-            _ => Err(InvalidCommand { provided_command: input.to_string()})
+            _ => Err(ValidationError::InvalidCommand { provided_command: input.to_string()})
         }
     }
 }
@@ -96,23 +96,5 @@ fn main() {
     match validate_input(&env::args().collect()) {
         Err(error) => handle_error(error),
         Ok((command, filename)) => execute_command(&command, filename)
-    }
-}
-
-fn tokenize(filename: &str) {
-    let file_contents = fs::read_to_string(filename).unwrap_or_else(|_| {
-        eprintln!("Failed to read file {}", filename);
-        String::new()
-    });
-
-    let mut scanner = Scanner::new(file_contents);
-    let tokens = scanner.scan_tokens();
-
-    for el in tokens {
-        println!("{}", el)
-    }
-
-    if scanner.has_error() {
-        std::process::exit(exitcode::DATAERR);
     }
 }

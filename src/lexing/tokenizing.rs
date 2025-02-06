@@ -1,4 +1,5 @@
-use std::fmt;
+use std::{fmt, fs};
+use crate::lexing::scanning::Scanner;
 use crate::util::string_util;
 
 #[derive(Debug, Clone, Copy)]
@@ -56,5 +57,23 @@ impl Token {
 impl fmt::Display for Token {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{} {} null", &self.token_type, &self.lexeme)
+    }
+}
+
+pub fn tokenize(filename: &str) {
+    let file_contents = fs::read_to_string(filename).unwrap_or_else(|_| {
+        eprintln!("Failed to read file {}", filename);
+        String::new()
+    });
+
+    let mut scanner = Scanner::new(file_contents);
+    let tokens = scanner.scan_tokens();
+
+    for el in tokens {
+        println!("{}", el)
+    }
+
+    if scanner.has_error() {
+        std::process::exit(exitcode::DATAERR);
     }
 }
