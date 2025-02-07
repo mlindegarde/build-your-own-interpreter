@@ -3,7 +3,7 @@ use exitcode::ExitCode;
 use crate::lexing::scanning::{ScanningError, Scanner};
 use crate::util::string_util;
 
-//* TOKEN TYPES ***********************************************************************************/
+//* TOKEN TYPES ********************************************************************************************************
 
 #[derive(Debug, Clone, Copy)]
 pub enum TokenType {
@@ -44,41 +44,56 @@ impl PartialEq for TokenType {
 
 impl Eq for TokenType {}
 
-//* TOKEN AND TOKEN IMPLEMENTATION ****************************************************************/
+//* TOKEN AND TOKEN IMPLEMENTATION *************************************************************************************
+
+#[derive(Debug, Clone)]
+pub enum Token {
+    Standard { lexeme: String, literal: String },
+    Terminal {}
+}
 
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
-pub struct Token {
+pub struct TokenInfo {
     pub token_type: TokenType,
-    pub lexeme: String,
-    pub literal: Option<String>,
-    pub line: u16
+    pub line: u16,
+    pub token: Token
 }
 
-impl Token {
-    pub fn new(token_type: TokenType, lexeme: String, literal: Option<String>, line: u16) -> Self {
-        Token {
+impl TokenInfo {
+    pub fn new(token_type: TokenType, line: u16, token: Token) -> Self {
+        TokenInfo {
             token_type,
-            lexeme,
-            literal,
-            line
+            line,
+            token
         }
     }
 }
 
-impl fmt::Display for Token {
+fn write_standard_token(f: &mut fmt::Formatter, token_type: TokenType, lexeme: &str, literal: &str) -> core::fmt::Result {
+    write!(f, "{} {} {}",
+           token_type,
+           lexeme,
+           match literal {
+               Some(literal) => literal,
+               None => "null"
+           })
+}
+
+fn write_terminal_token(f: &mut fmt::Formatter, token_type: TokenType) -> core::fmt::Result {
+    write!(f, "{}  null", token_type)
+}
+
+impl fmt::Display for TokenInfo {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{} {} {}",
-               &self.token_type,
-               &self.lexeme,
-               match &self.literal {
-                   Some(literal) => literal,
-                   None => "null"
-               })
+        match &self.token {
+            Token::Standard { lexeme, literal } => write_standard_token(f, self.token_type, lexeme, literal),
+            Token::Terminal {} => write!(f, "{}", &self.token_type)
+        }
     }
 }
 
-//* TOKENIZING COMMAND LOGIC **********************************************************************/
+//* TOKENIZING COMMAND LOGIC *******************************************************************************************
 
 fn display_tokens(tokens: &[Token]) {
     for token in tokens {

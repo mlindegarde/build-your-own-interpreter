@@ -9,7 +9,7 @@ use exitcode::ExitCode;
 extern crate exitcode;
 use crate::lexing::tokenizing::tokenize_file;
 
-//** VALIDATION ERRORS *****************************************************************************
+//** VALIDATION ERRORS *************************************************************************************************
 
 enum ValidationError {
     ArgumentCount { expected: usize, actual: usize },
@@ -32,7 +32,7 @@ impl fmt::Display for ValidationError {
     }
 }
 
-//** COMMANDS **************************************************************************************
+//** COMMANDS **********************************************************************************************************
 
 enum Command {
     Tokenize
@@ -75,7 +75,7 @@ fn validate_input(args: &[String]) -> Result<(Command,&String), ValidationError>
     Ok((command, filename))
 }
 
-//** EXECUTION LOGIC *******************************************************************************
+//** EXECUTION LOGIC ***************************************************************************************************
 
 fn execute_command(command: &Command, filename: &str) -> ExitCode {
     match command {

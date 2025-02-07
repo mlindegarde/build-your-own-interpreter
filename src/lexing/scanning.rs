@@ -1,8 +1,8 @@
 use std::fmt;
 
-use crate::lexing::tokenizing::{Token, TokenType};
+use crate::lexing::tokenizing::{Token, TokenInfo, TokenType};
 
-//** SCANNING ERRORS. ******************************************************************************
+//** SCANNING ERRORS. **************************************************************************************************
 
 #[allow(dead_code)]
 pub enum ScanningError {
@@ -25,7 +25,7 @@ impl fmt::Display for ScanningError {
     }
 }
 
-//* SCANNER AND SCANNER IMPLEMENTATION *************************************************************
+//* SCANNER AND SCANNER IMPLEMENTATION *********************************************************************************
 
 enum Trim {
     None,
@@ -37,7 +37,7 @@ pub struct Scanner {
     start_car: u16,
     current_char: u16,
     current_line: u16,
-    tokens: Vec<Token>,
+    tokens: Vec<TokenInfo>,
     errors: Vec<ScanningError>
 }
 
@@ -111,11 +111,12 @@ impl Scanner {
 
     fn add_token_with_literal(&mut self, token_type: TokenType, literal: Option<String>) {
         self.tokens.push(
-            Token::new(
+            TokenInfo::new(
                 token_type,
-                self.get_current_lexeme(Trim::None),
-                literal,
-                self.current_line));
+                self.current_line,
+                Token::Standard {
+                    lexeme: self.get_current_lexeme(Trim::None),
+                    literal: self.get_current_lexeme(Trim::Both) }));
 
         self.start_car = self.current_char;
     }
@@ -188,15 +189,13 @@ impl Scanner {
         }
     }
 
-    pub fn scan_tokens(&mut self) -> Result<&Vec<Token>, (&Vec<Token>, &Vec<ScanningError>)> {
+    pub fn scan_tokens(&mut self) -> Result<&Vec<TokenInfo>, (&Vec<TokenInfo>, &Vec<ScanningError>)> {
         while !self.is_at_end_of_input() {
             self.start_car = self.current_char;
             self.scan_token();
         }
 
-        // Add the terminal token that indicates the end of the stream, this is kind of a special
-        // case.  I should rewrite this to be more idiomatic Rust.
-        self.tokens.push(Token::new(TokenType::Eof, String::from(""), None, self.current_line));
+        self.tokens.push(TokenInfo::new(TokenType::Eof, self.current_line, Token::Terminal {}));
 
         if self.errors.is_empty() {
             Ok(&self.tokens)
