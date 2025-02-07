@@ -95,7 +95,7 @@ fn should_handle_string_literals() {
         vec![TokenType::String, TokenType::Eof]
     );
 
-    assert!(tokens.first().is_some_and(|token| token.lexeme == String::from("Hello, world!")));
+    assert!(tokens.first().is_some_and(|token| token.lexeme == String::from("\"Hello, world!\"")));
 }
 
 #[test]

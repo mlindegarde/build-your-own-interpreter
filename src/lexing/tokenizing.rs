@@ -51,14 +51,16 @@ impl Eq for TokenType {}
 pub struct Token {
     pub token_type: TokenType,
     pub lexeme: String,
+    pub literal: Option<String>,
     pub line: u16
 }
 
 impl Token {
-    pub fn new(token_type: TokenType, lexeme: String, line: u16) -> Self {
+    pub fn new(token_type: TokenType, lexeme: String, literal: Option<String>, line: u16) -> Self {
         Token {
             token_type,
             lexeme,
+            literal,
             line
         }
     }
@@ -66,7 +68,13 @@ impl Token {
 
 impl fmt::Display for Token {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{} {} null", &self.token_type, &self.lexeme)
+        write!(f, "{} {} {}",
+               &self.token_type,
+               &self.lexeme,
+               match &self.literal {
+                   Some(literal) => literal,
+                   None => "null"
+               })
     }
 }
 

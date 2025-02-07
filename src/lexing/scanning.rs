@@ -96,8 +96,36 @@ impl Scanner {
         self.source[start .. end]
             .to_string()
     }
+    fn is_at_end_of_input(&self) -> bool {
+        // Interesting discovery, self.source.len() assumes 8 bit characters and does not
+        // properly count the length in Unicode characters are in the string.
+        self.current_char >= self.source.chars().count() as u16
+    }
 
-    fn read_string(&mut self) {
+    fn add_token(&mut self, token_type: TokenType) {
+        self.add_token_with_literal(
+            token_type,
+            None
+        )
+    }
+
+    fn add_token_with_literal(&mut self, token_type: TokenType, literal: Option<String>) {
+        self.tokens.push(
+            Token::new(
+                token_type,
+                self.get_current_lexeme(Trim::None),
+                literal,
+                self.current_line));
+
+        self.start_car = self.current_char;
+    }
+
+    fn add_token_using_lookahead(&mut self, expected_char: char, match_token_type: TokenType, else_token_type: TokenType) {
+        let is_match = self.match_char(expected_char);
+        self.add_token(if is_match { match_token_type } else { else_token_type });
+    }
+
+    fn add_string_literal_token(&mut self) {
         while self.peek() != '"' && !self.is_at_end_of_input() {
             if self.peek() == '\n' { self.current_line += 1; }
             self.advance();
@@ -113,37 +141,9 @@ impl Scanner {
         }
 
         self.advance();
-
-        let value = self.get_current_lexeme(Trim::Both);
-        self.add_token_with_literal(TokenType::String, value);
-    }
-
-    fn is_at_end_of_input(&self) -> bool {
-        // Interesting discovery, self.source.len() assumes 8 bit characters and does not
-        // properly count the length in Unicode characters are in the string.
-        self.current_char >= self.source.chars().count() as u16
-    }
-
-    fn add_token(&mut self, token_type: TokenType) {
         self.add_token_with_literal(
-            token_type,
-            self.get_current_lexeme(Trim::None)
-        )
-    }
-
-    fn add_token_with_literal(&mut self, token_type: TokenType, lexeme: String) {
-        self.tokens.push(
-            Token::new(
-                token_type,
-                lexeme,
-                self.current_line));
-
-        self.start_car = self.current_char;
-    }
-
-    fn add_token_using_lookahead(&mut self, expected_char: char, match_token_type: TokenType, else_token_type: TokenType) {
-        let is_match = self.match_char(expected_char);
-        self.add_token(if is_match { match_token_type } else { else_token_type });
+            TokenType::String,
+            Some(self.get_current_lexeme(Trim::Both)));
     }
 
     fn handle_error(&mut self, current_char: char) {
@@ -182,7 +182,7 @@ impl Scanner {
             ' ' | '\r' | '\t' => { /* Just ignore these characters. */ },
             '\n' => self.current_line += 1,
             '"' => {
-                self.read_string()
+                self.add_string_literal_token()
             }
             _ => self.handle_error(current_char)
         }
@@ -194,8 +194,9 @@ impl Scanner {
             self.scan_token();
         }
 
-        // Add the terminal token that indicates the end of the stream
-        self.add_token_with_literal(TokenType::Eof, String::new());
+        // Add the terminal token that indicates the end of the stream, this is kind of a special
+        // case.  I should rewrite this to be more idiomatic Rust.
+        self.tokens.push(Token::new(TokenType::Eof, String::from(""), None, self.current_line));
 
         if self.errors.is_empty() {
             Ok(&self.tokens)
