@@ -48,7 +48,8 @@ impl Eq for TokenType {}
 
 #[derive(Debug, Clone)]
 pub enum Token {
-    Standard { lexeme: String, literal: String },
+    Standard { lexeme: String },
+    StringLiteral { lexeme: String, literal: String },
     Terminal {}
 }
 
@@ -73,7 +74,8 @@ impl TokenInfo {
 impl fmt::Display for TokenInfo {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match &self.token {
-            Token::Standard { lexeme, literal } => write!(f, "{} {} {}", self.token_type, lexeme, literal),
+            Token::Standard { lexeme } => write!(f, "{} {} null", self.token_type, lexeme),
+            Token::StringLiteral { lexeme, literal } => write!(f, "{} {} {}", self.token_type, lexeme, literal),
             Token::Terminal {} => write!(f, "{}  null", self.token_type)
         }
     }
