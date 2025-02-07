@@ -4,8 +4,10 @@ use crate::lexing::tokenizing::{Token, TokenType};
 
 //** SCANNING ERRORS. ******************************************************************************
 
+#[allow(dead_code)]
 pub enum ScanningError {
-    UnexpectedCharacter { line: u16, character: char }
+    UnexpectedCharacter { line: u16, character: char },
+    UnterminatedString { line: u16, input: String }
 }
 
 impl fmt::Display for ScanningError {
@@ -14,11 +16,21 @@ impl fmt::Display for ScanningError {
             ScanningError::UnexpectedCharacter { line, character } => {
                 write!(f, "[line {}] Error: Unexpected character: {}", line, character)
             }
+            ScanningError::UnterminatedString { line, input: _ } => {
+                // The input is known here and I would like to show it, but that wouldn't match
+                // the output CodeCrafters expects.
+                write!(f, "[line {}] Error: Unterminated string.", line)
+            }
         }
     }
 }
 
 //* SCANNER AND SCANNER IMPLEMENTATION *************************************************************
+
+enum Trim {
+    None,
+    Both
+}
 
 pub struct Scanner {
     source: String,
@@ -70,6 +82,42 @@ impl Scanner {
         }
     }
 
+    fn get_current_lexeme(&self, trim: Trim) -> String {
+        let start = match trim {
+            Trim::None => self.start_car,
+            Trim::Both => self.start_car + 1
+        } as usize;
+
+        let end = match trim {
+            Trim::None => self.current_char,
+            Trim::Both => self.current_char - 1
+        } as usize;
+
+        self.source[start .. end]
+            .to_string()
+    }
+
+    fn read_string(&mut self) {
+        while self.peek() != '"' && !self.is_at_end_of_input() {
+            if self.peek() == '\n' { self.current_line += 1; }
+            self.advance();
+        }
+
+        if self.is_at_end_of_input() {
+            self.errors.push(ScanningError::UnterminatedString {
+                line: self.current_line,
+                input: self.get_current_lexeme(Trim::None)
+            });
+
+            return;
+        }
+
+        self.advance();
+
+        let value = self.get_current_lexeme(Trim::Both);
+        self.add_token_with_literal(TokenType::String, value);
+    }
+
     fn is_at_end_of_input(&self) -> bool {
         // Interesting discovery, self.source.len() assumes 8 bit characters and does not
         // properly count the length in Unicode characters are in the string.
@@ -79,7 +127,7 @@ impl Scanner {
     fn add_token(&mut self, token_type: TokenType) {
         self.add_token_with_literal(
             token_type,
-            self.source[self.start_car as usize..self.current_char as usize].to_string()
+            self.get_current_lexeme(Trim::None)
         )
     }
 
@@ -133,6 +181,9 @@ impl Scanner {
             },
             ' ' | '\r' | '\t' => { /* Just ignore these characters. */ },
             '\n' => self.current_line += 1,
+            '"' => {
+                self.read_string()
+            }
             _ => self.handle_error(current_char)
         }
     }

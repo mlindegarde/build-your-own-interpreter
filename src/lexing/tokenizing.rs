@@ -18,6 +18,7 @@ pub enum TokenType {
     Equal, EqualEqual,
     Less, LessEqual,
     Greater, GreaterEqual,
+    String,
     Eof
 }
 
@@ -46,7 +47,7 @@ impl Eq for TokenType {}
 //* TOKEN AND TOKEN IMPLEMENTATION ****************************************************************/
 
 #[allow(dead_code)]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Token {
     pub token_type: TokenType,
     pub lexeme: String,
