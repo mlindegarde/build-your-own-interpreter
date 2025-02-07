@@ -82,6 +82,14 @@ impl Scanner {
         }
     }
 
+    fn peek_next(&self) -> char {
+        if self.current_char + 1 >= self.source.chars().count() as u16 {
+            '\0'
+        } else {
+            self.source.chars().nth((self.current_char + 1) as usize).unwrap_or('\0')
+        }
+    }
+
     fn get_current_lexeme(&self, trim: Trim) -> String {
         let start = match trim {
             Trim::None => self.start_car,
@@ -93,9 +101,9 @@ impl Scanner {
             Trim::Both => self.current_char - 1
         } as usize;
 
-        self.source[start .. end]
-            .to_string()
+        self.source[start .. end].to_string()
     }
+
     fn is_at_end_of_input(&self) -> bool {
         // Interesting discovery, self.source.len() assumes 8 bit characters and does not
         // properly count the length in Unicode characters are in the string.
@@ -154,6 +162,25 @@ impl Scanner {
         self.start_car = self.current_char;
     }
 
+    fn add_numeric_literal_token(&mut self) {
+        while self.peek().is_digit(10) { self.advance(); }
+
+        if self.peek() == '.' && self.peek_next().is_digit(10) {
+            self.advance();
+
+            while self.peek().is_digit(10) { self.advance(); }
+        }
+
+        let lexeme = self.get_current_lexeme(Trim::None);
+        let literal = lexeme.parse::<f64>().unwrap();
+
+        self.tokens.push(
+            Token::new(
+                self.current_line,
+                TokenType::Number,
+                TokenData::NumericLiteral { lexeme, literal }));
+    }
+
     fn handle_error(&mut self, current_char: char) {
         self.errors.push(ScanningError::UnexpectedCharacter {
             line: self.current_line,
@@ -185,6 +212,7 @@ impl Scanner {
             ' ' | '\r' | '\t' => {},
             '\n' => self.current_line += 1,
             '"' => self.add_string_literal_token(),
+            '0' ..= '9' => self.add_numeric_literal_token(),
             _ => self.handle_error(current_char)
         }
     }

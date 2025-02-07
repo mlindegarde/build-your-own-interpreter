@@ -95,8 +95,11 @@ fn should_handle_string_literals() {
         vec![TokenType::String, TokenType::Eof]
     );
 
-    let TokenData::StringLiteral {lexeme, literal: _ } = &tokens.first().unwrap().token_data else { panic!("Token should be Standard")};
+    let TokenData::StringLiteral {lexeme, literal } = &tokens.first().unwrap().token_data
+    else { panic!("Token should be Standard")};
+
     assert_eq!(lexeme, "\"Hello, world!\"");
+    assert_eq!(literal, "Hello, world!");
 }
 
 #[test]
@@ -125,6 +128,24 @@ fn should_return_unterminated_string_error_when_closing_quote_is_missing() {
     };
 }
 
+#[test]
+fn sh_handle_numeric_literal() {
+    let mut scanner = Scanner::new(String::from("123.45"));
+
+    let tokens = scanner.scan_tokens().unwrap_or(&EMPTY_TOKEN_INFO_LIST);
+    let token_types = get_token_types_from_tokens(tokens);
+
+    assert_eq!(
+        token_types,
+        vec![TokenType::Number, TokenType::Eof]
+    );
+
+    let TokenData::NumericLiteral {lexeme, literal } = &tokens.first().unwrap().token_data
+    else { panic!("Token should be Standard")};
+
+    assert_eq!(lexeme, "123.45");
+    assert_eq!(*literal, 123.45);
+}
 
 fn get_token_types_from_tokens(input: &Vec<Token>) -> Vec<TokenType> {
     input.iter().map(|token| token.token_type).collect()

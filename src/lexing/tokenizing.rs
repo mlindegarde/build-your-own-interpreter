@@ -19,6 +19,7 @@ pub enum TokenType {
     Less, LessEqual,
     Greater, GreaterEqual,
     String,
+    Number,
     Eof
 }
 
@@ -50,6 +51,7 @@ impl Eq for TokenType {}
 pub enum TokenData {
     Standard { lexeme: String },
     StringLiteral { lexeme: String, literal: String },
+    NumericLiteral { lexeme: String, literal: f64 },
     Terminal {}
 }
 
@@ -76,6 +78,7 @@ impl fmt::Display for Token {
         match &self.token_data {
             TokenData::Standard { lexeme } => write!(f, "{} {} null", self.token_type, lexeme),
             TokenData::StringLiteral { lexeme, literal } => write!(f, "{} {} {}", self.token_type, lexeme, literal),
+            TokenData::NumericLiteral { lexeme, literal } => write!(f, "{} {} {}", self.token_type, lexeme, literal),
             TokenData::Terminal {} => write!(f, "{}  null", self.token_type)
         }
     }
