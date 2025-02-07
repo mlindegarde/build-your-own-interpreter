@@ -78,7 +78,7 @@ impl fmt::Display for Token {
         match &self.token_data {
             TokenData::Standard { lexeme } => write!(f, "{} {} null", self.token_type, lexeme),
             TokenData::StringLiteral { lexeme, literal } => write!(f, "{} {} {}", self.token_type, lexeme, literal),
-            TokenData::NumericLiteral { lexeme, literal } => write!(f, "{} {} {}", self.token_type, lexeme, literal),
+            TokenData::NumericLiteral { lexeme, literal } => write!(f, "{} {} {:.1}", self.token_type, lexeme, literal),
             TokenData::Terminal {} => write!(f, "{}  null", self.token_type)
         }
     }
