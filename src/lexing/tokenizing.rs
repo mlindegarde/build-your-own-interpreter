@@ -70,34 +70,20 @@ impl TokenInfo {
     }
 }
 
-fn write_standard_token(f: &mut fmt::Formatter, token_type: TokenType, lexeme: &str, literal: &str) -> core::fmt::Result {
-    write!(f, "{} {} {}",
-           token_type,
-           lexeme,
-           match literal {
-               Some(literal) => literal,
-               None => "null"
-           })
-}
-
-fn write_terminal_token(f: &mut fmt::Formatter, token_type: TokenType) -> core::fmt::Result {
-    write!(f, "{}  null", token_type)
-}
-
 impl fmt::Display for TokenInfo {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match &self.token {
-            Token::Standard { lexeme, literal } => write_standard_token(f, self.token_type, lexeme, literal),
-            Token::Terminal {} => write!(f, "{}", &self.token_type)
+            Token::Standard { lexeme, literal } => write!(f, "{} {} {}", self.token_type, lexeme, literal),
+            Token::Terminal {} => write!(f, "{}  null", self.token_type)
         }
     }
 }
 
 //* TOKENIZING COMMAND LOGIC *******************************************************************************************
 
-fn display_tokens(tokens: &[Token]) {
-    for token in tokens {
-        println!("{}", token);
+fn display_tokens(tokens: &[TokenInfo]) {
+    for token_info in tokens {
+        println!("{}", token_info);
     }
 }
 

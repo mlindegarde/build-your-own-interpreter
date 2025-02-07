@@ -105,18 +105,18 @@ impl Scanner {
     fn add_token(&mut self, token_type: TokenType) {
         self.add_token_with_literal(
             token_type,
-            None
+            String::from("")
         )
     }
 
-    fn add_token_with_literal(&mut self, token_type: TokenType, literal: Option<String>) {
+    fn add_token_with_literal(&mut self, token_type: TokenType, literal: String) {
         self.tokens.push(
             TokenInfo::new(
                 token_type,
                 self.current_line,
                 Token::Standard {
                     lexeme: self.get_current_lexeme(Trim::None),
-                    literal: self.get_current_lexeme(Trim::Both) }));
+                    literal }));
 
         self.start_car = self.current_char;
     }
@@ -144,7 +144,7 @@ impl Scanner {
         self.advance();
         self.add_token_with_literal(
             TokenType::String,
-            Some(self.get_current_lexeme(Trim::Both)));
+            self.get_current_lexeme(Trim::Both));
     }
 
     fn handle_error(&mut self, current_char: char) {
