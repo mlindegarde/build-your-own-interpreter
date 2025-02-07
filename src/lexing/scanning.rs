@@ -1,6 +1,6 @@
 use std::fmt;
 
-use crate::lexing::tokenizing::{Token, TokenInfo, TokenType};
+use crate::lexing::tokenizing::{TokenData, Token, TokenType};
 
 //** SCANNING ERRORS. **************************************************************************************************
 
@@ -37,7 +37,7 @@ pub struct Scanner {
     start_car: u16,
     current_char: u16,
     current_line: u16,
-    tokens: Vec<TokenInfo>,
+    tokens: Vec<Token>,
     errors: Vec<ScanningError>
 }
 
@@ -102,12 +102,20 @@ impl Scanner {
         self.current_char >= self.source.chars().count() as u16
     }
 
+    fn add_terminal_token(&mut self) {
+        self.tokens.push(
+            Token::new(
+                self.current_line,
+                TokenType::Eof,
+                TokenData::Terminal {}));
+    }
+
     fn add_standard_token(&mut self, token_type: TokenType) {
         self.tokens.push(
-            TokenInfo::new(
-                token_type,
+            Token::new(
                 self.current_line,
-                Token::Standard { lexeme: self.get_current_lexeme(Trim::None) }));
+                token_type,
+                TokenData::Standard { lexeme: self.get_current_lexeme(Trim::None) }));
 
         self.start_car = self.current_char;
     }
@@ -116,36 +124,6 @@ impl Scanner {
         let is_match = self.match_char(expected_char);
         self.add_standard_token(if is_match { match_token_type } else { else_token_type });
     }
-
-    /*
-    fn add_token(&mut self, token_type: TokenType) {
-        self.add_token_with_literal(
-            token_type,
-            String::from("")
-        )
-    }
-    */
-
-    /*
-    fn add_token_with_literal(&mut self, token_type: TokenType, literal: String) {
-        self.tokens.push(
-            TokenInfo::new(
-                token_type,
-                self.current_line,
-                Token::Standard {
-                    lexeme: self.get_current_lexeme(Trim::None),
-                    literal }));
-
-        self.start_car = self.current_char;
-    }
-    */
-
-    /*
-    fn add_token_using_lookahead(&mut self, expected_char: char, match_token_type: TokenType, else_token_type: TokenType) {
-        let is_match = self.match_char(expected_char);
-        self.add_token(if is_match { match_token_type } else { else_token_type });
-    }
-    */
 
     fn add_string_literal_token(&mut self) {
         while self.peek() != '"' && !self.is_at_end_of_input() {
@@ -163,18 +141,12 @@ impl Scanner {
         }
 
         self.advance();
-        /*
-        self.add_token_with_literal(
-            TokenType::String,
-            self.get_current_lexeme(Trim::Both));
-
-         */
 
         self.tokens.push(
-            TokenInfo::new(
-                TokenType::String,
+            Token::new(
                 self.current_line,
-                Token::StringLiteral {
+                TokenType::String,
+                TokenData::StringLiteral {
                     lexeme: self.get_current_lexeme(Trim::None),
                     literal: self.get_current_lexeme(Trim::Both)
                 }));
@@ -194,7 +166,6 @@ impl Scanner {
         let current_char = self.advance();
 
         match current_char {
-            //'(' => self.add_token(TokenType::LeftParen),
             '(' => self.add_standard_token(TokenType::LeftParen),
             ')' => self.add_standard_token(TokenType::RightParen),
             '{' => self.add_standard_token(TokenType::LeftBrace),
@@ -216,22 +187,20 @@ impl Scanner {
                     self.add_standard_token(TokenType::Slash)
                 }
             },
-            ' ' | '\r' | '\t' => { /* Just ignore these characters. */ },
+            ' ' | '\r' | '\t' => {},
             '\n' => self.current_line += 1,
-            '"' => {
-                self.add_string_literal_token()
-            }
+            '"' => self.add_string_literal_token(),
             _ => self.handle_error(current_char)
         }
     }
 
-    pub fn scan_tokens(&mut self) -> Result<&Vec<TokenInfo>, (&Vec<TokenInfo>, &Vec<ScanningError>)> {
+    pub fn scan_tokens(&mut self) -> Result<&Vec<Token>, (&Vec<Token>, &Vec<ScanningError>)> {
         while !self.is_at_end_of_input() {
             self.start_car = self.current_char;
             self.scan_token();
         }
 
-        self.tokens.push(TokenInfo::new(TokenType::Eof, self.current_line, Token::Terminal {}));
+        self.add_terminal_token();
 
         if self.errors.is_empty() {
             Ok(&self.tokens)

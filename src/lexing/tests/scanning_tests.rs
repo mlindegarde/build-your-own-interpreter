@@ -1,7 +1,7 @@
 use crate::lexing::scanning::{ Scanner, ScanningError };
-use crate::lexing::tokenizing::{TokenType, Token, TokenInfo};
+use crate::lexing::tokenizing::{TokenType, TokenData, Token};
 
-static EMPTY_TOKEN_INFO_LIST: Vec<TokenInfo> = Vec::new();
+static EMPTY_TOKEN_INFO_LIST: Vec<Token> = Vec::new();
 
 #[test]
 fn should_return_eof_token_when_input_is_empty() {
@@ -67,7 +67,7 @@ fn should_return_slash_when_not_part_of_comment() {
 fn should_handle_empty_space_when_file_contains_it() {
     let mut scanner = Scanner::new(String::from(" \n\r\t\t(\n(\n"));
     let tokens = scanner.scan_tokens().unwrap_or(&EMPTY_TOKEN_INFO_LIST);
-    let Token::Standard {lexeme } = &tokens.first().unwrap().token else { panic!("Token should be Standard")};
+    let TokenData::Standard {lexeme } = &tokens.first().unwrap().token_data else { panic!("Token should be Standard")};
 
     assert_eq!(tokens.len(), 3);
     assert_eq!(lexeme, "(");
@@ -95,7 +95,7 @@ fn should_handle_string_literals() {
         vec![TokenType::String, TokenType::Eof]
     );
 
-    let Token::StringLiteral {lexeme, literal: _ } = &tokens.first().unwrap().token else { panic!("Token should be Standard")};
+    let TokenData::StringLiteral {lexeme, literal: _ } = &tokens.first().unwrap().token_data else { panic!("Token should be Standard")};
     assert_eq!(lexeme, "\"Hello, world!\"");
 }
 
@@ -126,7 +126,7 @@ fn should_return_unterminated_string_error_when_closing_quote_is_missing() {
 }
 
 
-fn get_token_types_from_tokens(input: &Vec<TokenInfo>) -> Vec<TokenType> {
+fn get_token_types_from_tokens(input: &Vec<Token>) -> Vec<TokenType> {
     input.iter().map(|token| token.token_type).collect()
 }
 

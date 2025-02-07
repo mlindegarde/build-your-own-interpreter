@@ -47,7 +47,7 @@ impl Eq for TokenType {}
 //* TOKEN AND TOKEN IMPLEMENTATION *************************************************************************************
 
 #[derive(Debug, Clone)]
-pub enum Token {
+pub enum TokenData {
     Standard { lexeme: String },
     StringLiteral { lexeme: String, literal: String },
     Terminal {}
@@ -55,35 +55,35 @@ pub enum Token {
 
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
-pub struct TokenInfo {
-    pub token_type: TokenType,
+pub struct Token {
     pub line: u16,
-    pub token: Token
+    pub token_type: TokenType,
+    pub token_data: TokenData
 }
 
-impl TokenInfo {
-    pub fn new(token_type: TokenType, line: u16, token: Token) -> Self {
-        TokenInfo {
-            token_type,
+impl Token {
+    pub fn new(line: u16, token_type: TokenType, token: TokenData) -> Self {
+        Token {
             line,
-            token
+            token_type,
+            token_data: token
         }
     }
 }
 
-impl fmt::Display for TokenInfo {
+impl fmt::Display for Token {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match &self.token {
-            Token::Standard { lexeme } => write!(f, "{} {} null", self.token_type, lexeme),
-            Token::StringLiteral { lexeme, literal } => write!(f, "{} {} {}", self.token_type, lexeme, literal),
-            Token::Terminal {} => write!(f, "{}  null", self.token_type)
+        match &self.token_data {
+            TokenData::Standard { lexeme } => write!(f, "{} {} null", self.token_type, lexeme),
+            TokenData::StringLiteral { lexeme, literal } => write!(f, "{} {} {}", self.token_type, lexeme, literal),
+            TokenData::Terminal {} => write!(f, "{}  null", self.token_type)
         }
     }
 }
 
 //* TOKENIZING COMMAND LOGIC *******************************************************************************************
 
-fn display_tokens(tokens: &[TokenInfo]) {
+fn display_tokens(tokens: &[Token]) {
     for token_info in tokens {
         println!("{}", token_info);
     }
