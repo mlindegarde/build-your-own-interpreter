@@ -180,13 +180,8 @@ impl Scanner {
             '=' => self.add_standard_token_using_lookahead('=', TokenType::EqualEqual, TokenType::Equal),
             '<' => self.add_standard_token_using_lookahead('=', TokenType::LessEqual, TokenType::Less),
             '>' => self.add_standard_token_using_lookahead('=', TokenType::GreaterEqual, TokenType::Greater),
-            '/' => {
-                if self.match_char('/') {
-                    while self.peek() != '\n' && !self.is_at_end_of_input() { self.advance(); }
-                } else {
-                    self.add_standard_token(TokenType::Slash)
-                }
-            },
+            '/' if self.match_char('/') => while self.peek() != '\n' && !self.is_at_end_of_input() { self.advance(); },
+            '/' => self.add_standard_token(TokenType::Slash),
             ' ' | '\r' | '\t' => {},
             '\n' => self.current_line += 1,
             '"' => self.add_string_literal_token(),
