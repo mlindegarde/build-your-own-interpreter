@@ -1,5 +1,5 @@
-use crate::lexing::scanning::{ Scanner, ScanningError };
-use crate::lexing::tokenizing::{TokenType, TokenData, Token};
+use crate::lexing::scanning::{Scanner, ScanningError};
+use crate::lexing::tokenizing::{Token, TokenData, TokenType};
 
 static EMPTY_TOKEN_INFO_LIST: Vec<Token> = Vec::new();
 
@@ -35,7 +35,6 @@ fn should_handle_two_character_operators() {
              TokenType::LessEqual, TokenType::Eof]);
 }
 
-
 #[test]
 fn should_skip_comments() {
     assert_eq!(
@@ -59,19 +58,17 @@ fn should_not_include_comment_value_in_lexeme_if_at_end_of_input() {
 fn should_return_slash_when_not_part_of_comment() {
     assert_eq!(
         get_token_types_from_input("/*"),
-        vec![TokenType::Slash, TokenType::Star, TokenType::Eof]
-    )
+        vec![TokenType::Slash, TokenType::Star, TokenType::Eof])
 }
 
 #[test]
 fn should_handle_empty_space_when_file_contains_it() {
     let mut scanner = Scanner::new(String::from(" \n\r\t\t(\n(\n"));
     let tokens = scanner.scan_tokens().unwrap_or(&EMPTY_TOKEN_INFO_LIST);
-    let TokenData::Standard {lexeme } = &tokens.first().unwrap().token_data else { panic!("Token should be Standard")};
+    let TokenData::Reserved {lexeme } = &tokens.first().unwrap().token_data else { panic!("Token should be Standard")};
 
     assert_eq!(tokens.len(), 3);
     assert_eq!(lexeme, "(");
-    //assert_eq!(tokens.iter().nth(1).unwrap().lexeme, String::from("("));
     assert_eq!(tokens.iter().nth(2).unwrap().line, 4);
 }
 
@@ -129,7 +126,7 @@ fn should_return_unterminated_string_error_when_closing_quote_is_missing() {
 }
 
 #[test]
-fn sh_handle_numeric_literal() {
+fn should_handle_numeric_literal() {
     let mut scanner = Scanner::new(String::from("12.45"));
 
     let tokens = scanner.scan_tokens().unwrap_or(&EMPTY_TOKEN_INFO_LIST);
@@ -147,6 +144,22 @@ fn sh_handle_numeric_literal() {
     assert_eq!(lexeme, "12.45");
     assert_eq!(*literal, 12.45);
     assert_eq!(format!("{}", token), "NUMBER 12.45 12.45");
+}
+
+#[test]
+fn should_handle_identifiers() {
+    assert_eq!(
+        get_token_types_from_input("foo bar _hello"),
+        vec![TokenType::Identifier, TokenType::Identifier, TokenType::Identifier, TokenType::Eof]);
+}
+
+#[test]
+fn should_handle_keywords_and_idenfiers() {
+    assert_eq!(
+        get_token_types_from_input("if (value == true) { return false; }"),
+        vec![TokenType::If, TokenType::LeftParen, TokenType::Identifier, TokenType::EqualEqual,
+             TokenType::True, TokenType::RightParen, TokenType::LeftBrace, TokenType::Return,
+             TokenType::False, TokenType::Semicolon, TokenType::RightBrace, TokenType::Eof]);
 }
 
 fn get_token_types_from_tokens(input: &Vec<Token>) -> Vec<TokenType> {

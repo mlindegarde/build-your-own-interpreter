@@ -20,7 +20,16 @@ pub enum TokenType {
     Greater, GreaterEqual,
     String,
     Number,
-    Eof
+    Eof,
+    And, Or,
+    If, Else,
+    True, False, Nil,
+    For, While,
+    Class, Fun, Var,
+    This, Super,
+    Return,
+    Print,
+    Identifier
 }
 
 /// Displays the string value for the enum after converting it to upper snake case:
@@ -49,7 +58,7 @@ impl Eq for TokenType {}
 
 #[derive(Debug, Clone)]
 pub enum TokenData {
-    Standard { lexeme: String },
+    Reserved { lexeme: String },
     StringLiteral { lexeme: String, literal: String },
     NumericLiteral { lexeme: String, literal: f64 },
     Terminal {}
@@ -78,7 +87,7 @@ impl Token {
 impl fmt::Display for Token {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match &self.token_data {
-            TokenData::Standard { lexeme } => write!(f, "{} {} null", self.token_type, lexeme),
+            TokenData::Reserved { lexeme } => write!(f, "{} {} null", self.token_type, lexeme),
             TokenData::StringLiteral { lexeme, literal } => write!(f, "{} {} {}", self.token_type, lexeme, literal),
             TokenData::NumericLiteral { lexeme, literal } => write!(f, "{} {} {:?}", self.token_type, lexeme, literal),
             TokenData::Terminal {} => write!(f, "{}  null", self.token_type)
