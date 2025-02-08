@@ -110,25 +110,26 @@ impl Scanner {
         self.current_char >= self.source.chars().count() as u16
     }
 
-    fn add_terminal_token(&mut self) {
-        self.tokens.push(
-            Token::new(
-                self.current_line,
-                TokenType::Eof,
-                TokenData::Terminal {}));
-    }
-
-    fn add_standard_token(&mut self, token_type: TokenType) {
-        self.tokens.push(
-            Token::new(
-                self.current_line,
-                token_type,
-                TokenData::Standard { lexeme: self.get_current_lexeme(Trim::None) }));
-
+    fn add_token(&mut self, token_type: TokenType, token_data: TokenData) {
+        self.tokens.push(Token::new(self.current_line, token_type, token_data));
         self.start_car = self.current_char;
     }
 
-    fn add_standard_token_using_lookahead(&mut self, expected_char: char, match_token_type: TokenType, else_token_type: TokenType) {
+    fn add_terminal_token(&mut self) {
+        self.add_token(TokenType::Eof, TokenData::Terminal {});
+    }
+
+    fn add_standard_token(&mut self, token_type: TokenType) {
+        self.add_token(
+            token_type,
+            TokenData::Standard { lexeme: self.get_current_lexeme(Trim::None) });
+    }
+
+    fn add_standard_token_using_lookahead(
+        &mut self, expected_char: char,
+        match_token_type: TokenType,
+        else_token_type: TokenType)
+    {
         let is_match = self.match_char(expected_char);
         self.add_standard_token(if is_match { match_token_type } else { else_token_type });
     }
@@ -149,36 +150,29 @@ impl Scanner {
         }
 
         self.advance();
-
-        self.tokens.push(
-            Token::new(
-                self.current_line,
-                TokenType::String,
-                TokenData::StringLiteral {
-                    lexeme: self.get_current_lexeme(Trim::None),
-                    literal: self.get_current_lexeme(Trim::Both)
-                }));
-
-        self.start_car = self.current_char;
+        self.add_token(
+            TokenType::String,
+            TokenData::StringLiteral {
+                lexeme: self.get_current_lexeme(Trim::None),
+                literal: self.get_current_lexeme(Trim::Both)
+            });
     }
 
     fn add_numeric_literal_token(&mut self) {
-        while self.peek().is_digit(10) { self.advance(); }
+        while self.peek().is_ascii_digit() { self.advance(); }
 
-        if self.peek() == '.' && self.peek_next().is_digit(10) {
+        if self.peek() == '.' && self.peek_next().is_ascii_digit() {
             self.advance();
 
-            while self.peek().is_digit(10) { self.advance(); }
+            while self.peek().is_ascii_digit() { self.advance(); }
         }
 
         let lexeme = self.get_current_lexeme(Trim::None);
         let literal = lexeme.parse::<f64>().unwrap();
 
-        self.tokens.push(
-            Token::new(
-                self.current_line,
-                TokenType::Number,
-                TokenData::NumericLiteral { lexeme, literal }));
+        self.add_token(
+            TokenType::Number,
+            TokenData::NumericLiteral { lexeme, literal });
     }
 
     fn handle_error(&mut self, current_char: char) {

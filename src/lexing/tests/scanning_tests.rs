@@ -146,8 +146,6 @@ fn sh_handle_numeric_literal() {
 
     assert_eq!(lexeme, "12.45");
     assert_eq!(*literal, 12.45);
-
-
     assert_eq!(format!("{}", token), "NUMBER 12.45 12.45");
 }
 
