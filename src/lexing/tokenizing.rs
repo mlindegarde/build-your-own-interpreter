@@ -3,7 +3,7 @@ use exitcode::ExitCode;
 use crate::lexing::scanning::{ScanningError, Scanner};
 use crate::util::string_util;
 
-//* TOKEN TYPES ********************************************************************************************************
+//** TOKEN TYPES *******************************************************************************************************
 
 #[derive(Debug, Clone, Copy)]
 pub enum TokenType {
@@ -45,7 +45,7 @@ impl PartialEq for TokenType {
 
 impl Eq for TokenType {}
 
-//* TOKEN AND TOKEN IMPLEMENTATION *************************************************************************************
+//** TOKEN DATA ENUM **************************************************************************************************
 
 #[derive(Debug, Clone)]
 pub enum TokenData {
@@ -54,6 +54,8 @@ pub enum TokenData {
     NumericLiteral { lexeme: String, literal: f64 },
     Terminal {}
 }
+
+//** TOKEN AND TOKEN IMPLEMENTATION ************************************************************************************
 
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
@@ -84,7 +86,7 @@ impl fmt::Display for Token {
     }
 }
 
-//* TOKENIZING COMMAND LOGIC *******************************************************************************************
+//** TOKENIZING COMMAND LOGIC ******************************************************************************************
 
 fn display_tokens(tokens: &[Token]) {
     for token_info in tokens {

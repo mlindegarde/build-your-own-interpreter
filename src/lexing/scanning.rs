@@ -25,7 +25,7 @@ impl fmt::Display for ScanningError {
     }
 }
 
-//* SCANNER AND SCANNER IMPLEMENTATION *********************************************************************************
+//** SCANNER AND SCANNER IMPLEMENTATION ********************************************************************************
 
 enum Trim {
     None,
