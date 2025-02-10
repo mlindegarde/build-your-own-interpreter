@@ -59,6 +59,14 @@ impl Cursor {
             source.chars().nth(self.current_char as usize).unwrap_or('\0')
         }
     }
+
+    fn peek_next(&self, source: &str) -> char {
+        if self.current_char + 1 >= source.chars().count() as u16 {
+            '\0'
+        } else {
+            source.chars().nth((self.current_char + 1) as usize).unwrap_or('\0')
+        }
+    }
 }
 
 pub struct Scanner {
@@ -108,16 +116,6 @@ impl Scanner {
                 true
             },
             Some(_) | None => false
-        }
-    }
-
-
-
-    fn peek_next(&self, cursor: &Cursor) -> char {
-        if cursor.current_char + 1 >= self.source.chars().count() as u16 {
-            '\0'
-        } else {
-            self.source.chars().nth((cursor.current_char + 1) as usize).unwrap_or('\0')
         }
     }
 
@@ -194,7 +192,7 @@ impl Scanner {
     fn build_numeric_literal_token(&self, cursor: &mut Cursor) -> Token {
         while cursor.peek(&self.source).is_ascii_digit() { self.advance(cursor); }
 
-        if cursor.peek(&self.source) == '.' && self.peek_next(cursor).is_ascii_digit() {
+        if cursor.peek(&self.source) == '.' && cursor.peek_next(&self.source).is_ascii_digit() {
             self.advance(cursor);
 
             while cursor.peek(&self.source).is_ascii_digit() { self.advance(cursor); }
