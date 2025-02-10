@@ -51,7 +51,7 @@ impl Cursor {
 
 pub struct Scanner {
     source: String,
-    cursor: Cursor,
+    //cursor: Cursor,
     keyword_map: HashMap<String, TokenType>
 }
 
@@ -59,7 +59,7 @@ impl Scanner {
     pub fn new(source: String) -> Self {
         Scanner {
             source,
-            cursor: Cursor::new(),
+            //cursor: Cursor::new(),
             keyword_map: HashMap::from([
                 ("and".to_string(), TokenType::And),
                 ("class".to_string(), TokenType::Class),
@@ -80,187 +80,192 @@ impl Scanner {
         }
     }
 
-    fn advance(&mut self) -> char {
-        let value = self.source.chars().nth(self.cursor.current_char as usize).unwrap();
-        self.cursor.current_char += 1;
+    fn advance(&self, cursor: &mut Cursor) -> char {
+        let value = self.source.chars().nth(cursor.current_char as usize).unwrap();
+        cursor.current_char += 1;
 
         value
     }
 
-    fn match_char(&mut self, expected: char) -> bool {
-        if self.is_at_end_of_input() {
+    fn match_char(&self, expected: char, cursor: &mut Cursor) -> bool {
+        if self.is_at_end_of_input(cursor) {
             return false;
         }
 
-        match self.source.chars().nth(self.cursor.current_char as usize) {
+        match self.source.chars().nth(cursor.current_char as usize) {
             Some(value) if value == expected => {
-                self.cursor.current_char += 1;
+                cursor.current_char += 1;
                 true
             },
             Some(_) | None => false
         }
     }
 
-    fn peek(&self) -> char {
-        if self.is_at_end_of_input() {
+    fn peek(&self, cursor: &Cursor) -> char {
+        if self.is_at_end_of_input(cursor) {
             '\0'
         } else {
-            self.source.chars().nth(self.cursor.current_char as usize).unwrap_or('\0')
+            self.source.chars().nth(cursor.current_char as usize).unwrap_or('\0')
         }
     }
 
-    fn peek_next(&self) -> char {
-        if self.cursor.current_char + 1 >= self.source.chars().count() as u16 {
+    fn peek_next(&self, cursor: &Cursor) -> char {
+        if cursor.current_char + 1 >= self.source.chars().count() as u16 {
             '\0'
         } else {
-            self.source.chars().nth((self.cursor.current_char + 1) as usize).unwrap_or('\0')
+            self.source.chars().nth((cursor.current_char + 1) as usize).unwrap_or('\0')
         }
     }
 
-    fn get_current_lexeme(&self, trim: Trim) -> String {
+    fn get_current_lexeme(&self, trim: Trim, cursor: &Cursor) -> String {
         let start = match trim {
-            Trim::None => self.cursor.start_car,
-            Trim::Both => self.cursor.start_car + 1
+            Trim::None => cursor.start_car,
+            Trim::Both => cursor.start_car + 1
         } as usize;
 
         let end = match trim {
-            Trim::None => self.cursor.current_char,
-            Trim::Both => self.cursor.current_char - 1
+            Trim::None => cursor.current_char,
+            Trim::Both => cursor.current_char - 1
         } as usize;
 
         self.source[start .. end].to_string()
     }
 
-    fn is_at_end_of_input(&self) -> bool {
+    fn is_at_end_of_input(&self, cursor: &Cursor) -> bool {
         // Interesting discovery, self.source.len() assumes 8 bit characters and does not
         // properly count the length in Unicode characters are in the string.
-        self.cursor.current_char >= self.source.chars().count() as u16
+        cursor.current_char >= self.source.chars().count() as u16
     }
 
-    fn build_token(&self, token_type: TokenType, token_data: TokenData) -> Token {
-        Token::new(self.cursor.current_line, token_type, token_data)
+    fn build_token(&self, token_type: TokenType, token_data: TokenData, cursor: &Cursor) -> Token {
+        Token::new(cursor.current_line, token_type, token_data)
     }
 
-    fn build_terminal_token(&self) -> Token {
-        self.build_token(TokenType::Eof, TokenData::Terminal)
+    fn build_terminal_token(&self, cursor: &Cursor) -> Token {
+        self.build_token(TokenType::Eof, TokenData::Terminal, cursor)
     }
 
-    fn build_comment_token(&mut self) -> Token {
-        while self.peek() != '\n' && !self.is_at_end_of_input() {
-            self.advance();
+    fn build_comment_token(&self, cursor: &mut Cursor) -> Token {
+        while self.peek(cursor) != '\n' && !self.is_at_end_of_input(cursor) {
+            self.advance(cursor);
         }
 
-        self.build_token(TokenType::Comment, TokenData::Comment)
+        self.build_token(TokenType::Comment, TokenData::Comment, cursor)
     }
 
-    fn build_reserved_token(&self, token_type: TokenType) -> Token {
+    fn build_reserved_token(&self, token_type: TokenType, cursor: &Cursor) -> Token {
         self.build_token(
             token_type,
-            TokenData::Reserved { lexeme: self.get_current_lexeme(Trim::None) })
+            TokenData::Reserved { lexeme: self.get_current_lexeme(Trim::None, cursor) },
+            cursor)
     }
 
     fn build_reserved_token_using_lookahead(
-        &mut self, expected_char: char,
+        &self, expected_char: char,
         match_token_type: TokenType,
-        else_token_type: TokenType) -> Token
+        else_token_type: TokenType,
+        cursor: &mut Cursor) -> Token
     {
-        let is_match = self.match_char(expected_char);
-        self.build_reserved_token(if is_match { match_token_type } else { else_token_type })
+        let is_match = self.match_char(expected_char, cursor);
+        self.build_reserved_token(if is_match { match_token_type } else { else_token_type }, cursor)
     }
 
-    fn build_string_literal_token(&mut self) -> Result<Token, ScanningError> {
-        while self.peek() != '"' && !self.is_at_end_of_input() {
-            if self.peek() == '\n' { self.cursor.current_line += 1; }
-            self.advance();
+    fn build_string_literal_token(&self, cursor: &mut Cursor) -> Result<Token, ScanningError> {
+        while self.peek(cursor) != '"' && !self.is_at_end_of_input(cursor) {
+            if self.peek(cursor) == '\n' { cursor.current_line += 1; }
+            self.advance(cursor);
         }
 
-        if self.is_at_end_of_input() {
+        if self.is_at_end_of_input(cursor) {
             return Err(ScanningError::UnterminatedString {
-                line: self.cursor.current_line,
-                input: self.get_current_lexeme(Trim::None)
+                line: cursor.current_line,
+                input: self.get_current_lexeme(Trim::None, cursor)
             });
         }
 
-        self.advance();
+        self.advance(cursor);
         Ok(self.build_token(
             TokenType::String,
             TokenData::StringLiteral {
-                lexeme: self.get_current_lexeme(Trim::None),
-                literal: self.get_current_lexeme(Trim::Both)
-            }))
+                lexeme: self.get_current_lexeme(Trim::None, cursor),
+                literal: self.get_current_lexeme(Trim::Both, cursor)
+            },
+            cursor))
     }
 
-    fn build_numeric_literal_token(&mut self) -> Token {
-        while self.peek().is_ascii_digit() { self.advance(); }
+    fn build_numeric_literal_token(&self, cursor: &mut Cursor) -> Token {
+        while self.peek(cursor).is_ascii_digit() { self.advance(cursor); }
 
-        if self.peek() == '.' && self.peek_next().is_ascii_digit() {
-            self.advance();
+        if self.peek(cursor) == '.' && self.peek_next(cursor).is_ascii_digit() {
+            self.advance(cursor);
 
-            while self.peek().is_ascii_digit() { self.advance(); }
+            while self.peek(cursor).is_ascii_digit() { self.advance(cursor); }
         }
 
-        let lexeme = self.get_current_lexeme(Trim::None);
+        let lexeme = self.get_current_lexeme(Trim::None, cursor);
         let literal = lexeme.parse::<f64>().unwrap();
 
         self.build_token(
             TokenType::Number,
-            TokenData::NumericLiteral { lexeme, literal })
+            TokenData::NumericLiteral { lexeme, literal },
+            cursor)
     }
 
-    fn build_keyword_or_identifier_token(&mut self) -> Token {
-        while self.peek().is_ascii_alphanumeric() || self.peek() == '_' { self.advance(); }
+    fn build_keyword_or_identifier_token(&self, cursor: &mut Cursor) -> Token {
+        while self.peek(cursor).is_ascii_alphanumeric() || self.peek(cursor) == '_' { self.advance(cursor); }
 
-        let lexeme = self.get_current_lexeme(Trim::None);
+        let lexeme = self.get_current_lexeme(Trim::None, cursor);
         let token_type = *self.keyword_map.get(&lexeme).unwrap_or(&TokenType::Identifier);
 
-        self.build_reserved_token(token_type)
+        self.build_reserved_token(token_type, cursor)
     }
 
-    fn handle_error(&self, current_char: char) -> ScanningError {
+    fn handle_error(&self, current_char: char, cursor: &Cursor) -> ScanningError {
         ScanningError::UnexpectedCharacter {
-            line: self.cursor.current_line,
+            line: cursor.current_line,
             character: current_char }
     }
 
-    fn scan_token(&mut self, current_char: char) -> Result<Token, ScanningError> {
+    fn scan_token(&mut self, current_char: char, cursor: &mut Cursor) -> Result<Token, ScanningError> {
         match current_char {
-            '(' => Ok(self.build_reserved_token(TokenType::LeftParen)),
-            ')' => Ok(self.build_reserved_token(TokenType::RightParen)),
-            '{' => Ok(self.build_reserved_token(TokenType::LeftBrace)),
-            '}' => Ok(self.build_reserved_token(TokenType::RightBrace)),
-            ',' => Ok(self.build_reserved_token(TokenType::Comma)),
-            '.' => Ok(self.build_reserved_token(TokenType::Dot)),
-            '-' => Ok(self.build_reserved_token(TokenType::Minus)),
-            '+' => Ok(self.build_reserved_token(TokenType::Plus)),
-            ';' => Ok(self.build_reserved_token(TokenType::Semicolon)),
-            '*' => Ok(self.build_reserved_token(TokenType::Star)),
-            '!' => Ok(self.build_reserved_token_using_lookahead('=', TokenType::BangEqual, TokenType::Bang)),
-            '=' => Ok(self.build_reserved_token_using_lookahead('=', TokenType::EqualEqual, TokenType::Equal)),
-            '<' => Ok(self.build_reserved_token_using_lookahead('=', TokenType::LessEqual, TokenType::Less)),
-            '>' => Ok(self.build_reserved_token_using_lookahead('=', TokenType::GreaterEqual, TokenType::Greater)),
-            '/' if self.match_char('/') => Ok(self.build_comment_token()),
-            '/' => Ok(self.build_reserved_token(TokenType::Slash)),
-            ' ' | '\r' | '\t' => Ok(self.build_reserved_token(TokenType::Whitespace)),
-            '\n' => Ok(self.build_reserved_token(TokenType::EndOfLine)),
-            '"' => Ok(self.build_string_literal_token()?),
-            '0' ..= '9' => Ok(self.build_numeric_literal_token()),
-            'a' ..= 'z' | 'A' ..= 'Z' | '_' => Ok(self.build_keyword_or_identifier_token()),
-            _ => Err(self.handle_error(current_char))
+            '(' => Ok(self.build_reserved_token(TokenType::LeftParen, cursor)),
+            ')' => Ok(self.build_reserved_token(TokenType::RightParen, cursor)),
+            '{' => Ok(self.build_reserved_token(TokenType::LeftBrace, cursor)),
+            '}' => Ok(self.build_reserved_token(TokenType::RightBrace, cursor)),
+            ',' => Ok(self.build_reserved_token(TokenType::Comma, cursor)),
+            '.' => Ok(self.build_reserved_token(TokenType::Dot, cursor)),
+            '-' => Ok(self.build_reserved_token(TokenType::Minus, cursor)),
+            '+' => Ok(self.build_reserved_token(TokenType::Plus, cursor)),
+            ';' => Ok(self.build_reserved_token(TokenType::Semicolon, cursor)),
+            '*' => Ok(self.build_reserved_token(TokenType::Star, cursor)),
+            '!' => Ok(self.build_reserved_token_using_lookahead('=', TokenType::BangEqual, TokenType::Bang, cursor)),
+            '=' => Ok(self.build_reserved_token_using_lookahead('=', TokenType::EqualEqual, TokenType::Equal, cursor)),
+            '<' => Ok(self.build_reserved_token_using_lookahead('=', TokenType::LessEqual, TokenType::Less, cursor)),
+            '>' => Ok(self.build_reserved_token_using_lookahead('=', TokenType::GreaterEqual, TokenType::Greater, cursor)),
+            '/' if self.match_char('/', cursor) => Ok(self.build_comment_token(cursor)),
+            '/' => Ok(self.build_reserved_token(TokenType::Slash, cursor)),
+            ' ' | '\r' | '\t' => Ok(self.build_reserved_token(TokenType::Whitespace, cursor)),
+            '\n' => Ok(self.build_reserved_token(TokenType::EndOfLine, cursor)),
+            '"' => Ok(self.build_string_literal_token(cursor)?),
+            '0' ..= '9' => Ok(self.build_numeric_literal_token(cursor)),
+            'a' ..= 'z' | 'A' ..= 'Z' | '_' => Ok(self.build_keyword_or_identifier_token(cursor)),
+            _ => Err(self.handle_error(current_char, cursor))
         }
     }
 
     pub fn scan_tokens(&mut self) -> Result<Vec<Token>, (Vec<Token>, Vec<ScanningError>)> {
         let mut tokens: Vec<Token> = Vec::new();
         let mut errors: Vec<ScanningError> = Vec::new();
+        let mut cursor = Cursor::new();
 
-        while !self.is_at_end_of_input() {
-            self.cursor.start_car = self.cursor.current_char;
-            let cur_char = self.advance();
-            
-            match self.scan_token(cur_char) {
+        while !self.is_at_end_of_input(&cursor) {
+            cursor.start_car = cursor.current_char;
+            let cur_char = self.advance(&mut cursor);
+
+            match self.scan_token(cur_char, &mut cursor) {
                 Ok(token) => match token.token_type {
                     TokenType::Whitespace | TokenType::Comment => {},
-                    TokenType::EndOfLine => self.cursor.current_line += 1,
+                    TokenType::EndOfLine => cursor.current_line += 1,
                     _ => tokens.push(token)
                 },
                 Err(error) => {
@@ -269,7 +274,7 @@ impl Scanner {
             }
         }
 
-        tokens.push(self.build_terminal_token());
+        tokens.push(self.build_terminal_token(&mut cursor));
 
         if errors.is_empty() {
             Ok(tokens)
