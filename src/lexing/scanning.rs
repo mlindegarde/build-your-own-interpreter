@@ -33,11 +33,25 @@ enum Trim {
     Both
 }
 
-pub struct Scanner {
-    source: String,
+struct Cursor {
     start_car: u16,
     current_char: u16,
-    current_line: u16,
+    current_line: u16
+}
+
+impl Cursor {
+    pub fn new() -> Self {
+        Cursor {
+            start_car: 0,
+            current_char: 0,
+            current_line: 1
+        }
+    }
+}
+
+pub struct Scanner {
+    source: String,
+    cursor: Cursor,
     keyword_map: HashMap<String, TokenType>
 }
 
@@ -45,9 +59,7 @@ impl Scanner {
     pub fn new(source: String) -> Self {
         Scanner {
             source,
-            start_car: 0,
-            current_char: 0,
-            current_line: 1,
+            cursor: Cursor::new(),
             keyword_map: HashMap::from([
                 ("and".to_string(), TokenType::And),
                 ("class".to_string(), TokenType::Class),
@@ -69,8 +81,8 @@ impl Scanner {
     }
 
     fn advance(&mut self) -> char {
-        let value = self.source.chars().nth(self.current_char as usize).unwrap();
-        self.current_char += 1;
+        let value = self.source.chars().nth(self.cursor.current_char as usize).unwrap();
+        self.cursor.current_char += 1;
 
         value
     }
@@ -80,9 +92,9 @@ impl Scanner {
             return false;
         }
 
-        match self.source.chars().nth(self.current_char as usize) {
+        match self.source.chars().nth(self.cursor.current_char as usize) {
             Some(value) if value == expected => {
-                self.current_char += 1;
+                self.cursor.current_char += 1;
                 true
             },
             Some(_) | None => false
@@ -93,27 +105,27 @@ impl Scanner {
         if self.is_at_end_of_input() {
             '\0'
         } else {
-            self.source.chars().nth(self.current_char as usize).unwrap_or('\0')
+            self.source.chars().nth(self.cursor.current_char as usize).unwrap_or('\0')
         }
     }
 
     fn peek_next(&self) -> char {
-        if self.current_char + 1 >= self.source.chars().count() as u16 {
+        if self.cursor.current_char + 1 >= self.source.chars().count() as u16 {
             '\0'
         } else {
-            self.source.chars().nth((self.current_char + 1) as usize).unwrap_or('\0')
+            self.source.chars().nth((self.cursor.current_char + 1) as usize).unwrap_or('\0')
         }
     }
 
     fn get_current_lexeme(&self, trim: Trim) -> String {
         let start = match trim {
-            Trim::None => self.start_car,
-            Trim::Both => self.start_car + 1
+            Trim::None => self.cursor.start_car,
+            Trim::Both => self.cursor.start_car + 1
         } as usize;
 
         let end = match trim {
-            Trim::None => self.current_char,
-            Trim::Both => self.current_char - 1
+            Trim::None => self.cursor.current_char,
+            Trim::Both => self.cursor.current_char - 1
         } as usize;
 
         self.source[start .. end].to_string()
@@ -122,11 +134,11 @@ impl Scanner {
     fn is_at_end_of_input(&self) -> bool {
         // Interesting discovery, self.source.len() assumes 8 bit characters and does not
         // properly count the length in Unicode characters are in the string.
-        self.current_char >= self.source.chars().count() as u16
+        self.cursor.current_char >= self.source.chars().count() as u16
     }
 
     fn build_token(&self, token_type: TokenType, token_data: TokenData) -> Token {
-        Token::new(self.current_line, token_type, token_data)
+        Token::new(self.cursor.current_line, token_type, token_data)
     }
 
     fn build_terminal_token(&self) -> Token {
@@ -158,13 +170,13 @@ impl Scanner {
 
     fn build_string_literal_token(&mut self) -> Result<Token, ScanningError> {
         while self.peek() != '"' && !self.is_at_end_of_input() {
-            if self.peek() == '\n' { self.current_line += 1; }
+            if self.peek() == '\n' { self.cursor.current_line += 1; }
             self.advance();
         }
 
         if self.is_at_end_of_input() {
             return Err(ScanningError::UnterminatedString {
-                line: self.current_line,
+                line: self.cursor.current_line,
                 input: self.get_current_lexeme(Trim::None)
             });
         }
@@ -206,7 +218,7 @@ impl Scanner {
 
     fn handle_error(&self, current_char: char) -> ScanningError {
         ScanningError::UnexpectedCharacter {
-            line: self.current_line,
+            line: self.cursor.current_line,
             character: current_char }
     }
 
@@ -242,13 +254,13 @@ impl Scanner {
         let mut errors: Vec<ScanningError> = Vec::new();
 
         while !self.is_at_end_of_input() {
-            self.start_car = self.current_char;
+            self.cursor.start_car = self.cursor.current_char;
             let cur_char = self.advance();
-
+            
             match self.scan_token(cur_char) {
                 Ok(token) => match token.token_type {
                     TokenType::Whitespace | TokenType::Comment => {},
-                    TokenType::EndOfLine => self.current_line += 1,
+                    TokenType::EndOfLine => self.cursor.current_line += 1,
                     _ => tokens.push(token)
                 },
                 Err(error) => {
