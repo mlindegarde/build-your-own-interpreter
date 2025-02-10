@@ -243,8 +243,9 @@ impl Scanner {
 
         while !self.is_at_end_of_input() {
             self.start_car = self.current_char;
+            let cur_char = self.advance();
 
-            match self.scan_token(self.advance()) {
+            match self.scan_token(cur_char) {
                 Ok(token) => match token.token_type {
                     TokenType::Whitespace | TokenType::Comment => {},
                     TokenType::EndOfLine => self.current_line += 1,
