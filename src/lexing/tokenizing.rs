@@ -63,7 +63,7 @@ impl Eq for TokenType {}
 pub enum TokenData<'a> {
     Reserved { lexeme: &'a str },
     StringLiteral { lexeme: String, literal: String },
-    NumericLiteral { lexeme: String, literal: f64 },
+    NumericLiteral { lexeme: &'a str, literal: f64 },
     Terminal, Comment
 }
 

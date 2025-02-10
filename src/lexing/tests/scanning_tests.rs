@@ -128,11 +128,11 @@ fn should_handle_numeric_literal() {
     );
 
     let token = tokens.first().unwrap();
-    let TokenData::NumericLiteral {lexeme, literal } = &token.token_data
+    let TokenData::NumericLiteral {lexeme, literal } = token.token_data
     else { panic!("Token should be Standard")};
 
     assert_eq!(lexeme, "12.45");
-    assert_eq!(*literal, 12.45);
+    assert_eq!(literal, 12.45);
     assert_eq!(format!("{}", token), "NUMBER 12.45 12.45");
 }
 

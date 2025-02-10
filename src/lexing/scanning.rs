@@ -202,7 +202,7 @@ impl Scanner {
             while self.peek(cursor).is_ascii_digit() { self.advance(cursor); }
         }
 
-        let lexeme = self.get_current_lexeme(Trim::None, cursor).to_string();
+        let lexeme = self.get_current_lexeme(Trim::None, cursor);
         let literal = lexeme.parse::<f64>().unwrap();
 
         self.build_token(
