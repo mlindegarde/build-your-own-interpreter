@@ -125,11 +125,11 @@ impl Scanner {
         self.current_char >= self.source.chars().count() as u16
     }
 
-    fn build_token(&mut self, token_type: TokenType, token_data: TokenData) -> Token {
+    fn build_token(&self, token_type: TokenType, token_data: TokenData) -> Token {
         Token::new(self.current_line, token_type, token_data)
     }
 
-    fn build_terminal_token(&mut self) -> Token {
+    fn build_terminal_token(&self) -> Token {
         self.build_token(TokenType::Eof, TokenData::Terminal)
     }
 
@@ -141,7 +141,7 @@ impl Scanner {
         self.build_token(TokenType::Comment, TokenData::Comment)
     }
 
-    fn build_reserved_token(&mut self, token_type: TokenType) -> Token {
+    fn build_reserved_token(&self, token_type: TokenType) -> Token {
         self.build_token(
             token_type,
             TokenData::Reserved { lexeme: self.get_current_lexeme(Trim::None) })
@@ -204,15 +204,13 @@ impl Scanner {
         self.build_reserved_token(token_type)
     }
 
-    fn handle_error(&mut self, current_char: char) -> ScanningError {
+    fn handle_error(&self, current_char: char) -> ScanningError {
         ScanningError::UnexpectedCharacter {
             line: self.current_line,
             character: current_char }
     }
 
-    fn scan_token(&mut self) -> Result<Token, ScanningError> {
-        let current_char = self.advance();
-
+    fn scan_token(&mut self, current_char: char) -> Result<Token, ScanningError> {
         match current_char {
             '(' => Ok(self.build_reserved_token(TokenType::LeftParen)),
             ')' => Ok(self.build_reserved_token(TokenType::RightParen)),
@@ -228,7 +226,6 @@ impl Scanner {
             '=' => Ok(self.build_reserved_token_using_lookahead('=', TokenType::EqualEqual, TokenType::Equal)),
             '<' => Ok(self.build_reserved_token_using_lookahead('=', TokenType::LessEqual, TokenType::Less)),
             '>' => Ok(self.build_reserved_token_using_lookahead('=', TokenType::GreaterEqual, TokenType::Greater)),
-            //'/' if self.match_char('/') => while self.peek() != '\n' && !self.is_at_end_of_input() { self.advance(); },
             '/' if self.match_char('/') => Ok(self.build_comment_token()),
             '/' => Ok(self.build_reserved_token(TokenType::Slash)),
             ' ' | '\r' | '\t' => Ok(self.build_reserved_token(TokenType::Whitespace)),
@@ -247,7 +244,7 @@ impl Scanner {
         while !self.is_at_end_of_input() {
             self.start_car = self.current_char;
 
-            match self.scan_token() {
+            match self.scan_token(self.advance()) {
                 Ok(token) => match token.token_type {
                     TokenType::Whitespace | TokenType::Comment => {},
                     TokenType::EndOfLine => self.current_line += 1,
