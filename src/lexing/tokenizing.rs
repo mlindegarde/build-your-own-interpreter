@@ -29,7 +29,10 @@ pub enum TokenType {
     This, Super,
     Return,
     Print,
-    Identifier
+    Identifier,
+    Whitespace,
+    EndOfLine,
+    Comment
 }
 
 /// Displays the string value for the enum after converting it to upper snake case:
@@ -61,7 +64,7 @@ pub enum TokenData {
     Reserved { lexeme: String },
     StringLiteral { lexeme: String, literal: String },
     NumericLiteral { lexeme: String, literal: f64 },
-    Terminal {}
+    Terminal, Comment
 }
 
 //** TOKEN AND TOKEN IMPLEMENTATION ************************************************************************************
@@ -90,7 +93,7 @@ impl fmt::Display for Token {
             TokenData::Reserved { lexeme } => write!(f, "{} {} null", self.token_type, lexeme),
             TokenData::StringLiteral { lexeme, literal } => write!(f, "{} {} {}", self.token_type, lexeme, literal),
             TokenData::NumericLiteral { lexeme, literal } => write!(f, "{} {} {:?}", self.token_type, lexeme, literal),
-            TokenData::Terminal {} => write!(f, "{}  null", self.token_type)
+            TokenData::Terminal | TokenData::Comment => write!(f, "{}  null", self.token_type)
         }
     }
 }
@@ -117,12 +120,12 @@ pub fn tokenize_file(filename: &str) -> ExitCode {
 
     match Scanner::new(file_contents).scan_tokens() {
         Ok(tokens) => {
-            display_tokens(tokens);
+            display_tokens(&tokens);
             exitcode::OK
         },
         Err((tokens, errors)) => {
-            display_errors(errors);
-            display_tokens(tokens);
+            display_errors(&errors);
+            display_tokens(&tokens);
             exitcode::DATAERR
         }
     }
