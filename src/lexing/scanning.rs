@@ -47,6 +47,10 @@ impl Cursor {
             current_line: 1
         }
     }
+
+    pub fn is_at_end_of_input(&self, source: &str) -> bool {
+        self.current_char >= source.chars().count() as u16
+    }
 }
 
 pub struct Scanner {
@@ -88,7 +92,8 @@ impl Scanner {
     }
 
     fn match_char(&self, expected: char, cursor: &mut Cursor) -> bool {
-        if self.is_at_end_of_input(cursor) {
+        //if self.is_at_end_of_input(cursor) {
+        if cursor.is_at_end_of_input(&self.source) {
             return false;
         }
 
@@ -102,7 +107,8 @@ impl Scanner {
     }
 
     fn peek(&self, cursor: &Cursor) -> char {
-        if self.is_at_end_of_input(cursor) {
+        //if self.is_at_end_of_input(cursor) {
+        if cursor.is_at_end_of_input(&self.source) {
             '\0'
         } else {
             self.source.chars().nth(cursor.current_char as usize).unwrap_or('\0')
@@ -131,11 +137,13 @@ impl Scanner {
         &self.source[start .. end]
     }
 
+    /*
     fn is_at_end_of_input(&self, cursor: &Cursor) -> bool {
         // Interesting discovery, self.source.len() assumes 8 bit characters and does not
         // properly count the length in Unicode characters are in the string.
         cursor.current_char >= self.source.chars().count() as u16
     }
+    */
 
     fn build_token<'a>(&self, token_type: TokenType, token_data: TokenData<'a>, cursor: &Cursor) -> Token<'a> {
         Token::new(cursor.current_line, token_type, token_data)
@@ -146,7 +154,8 @@ impl Scanner {
     }
 
     fn build_comment_token(&self, cursor: &mut Cursor) -> Token {
-        while self.peek(cursor) != '\n' && !self.is_at_end_of_input(cursor) {
+        //while self.peek(cursor) != '\n' && !self.is_at_end_of_input(cursor) {
+        while self.peek(cursor) != '\n' && !cursor.is_at_end_of_input(&self.source) {
             self.advance(cursor);
         }
 
@@ -171,12 +180,14 @@ impl Scanner {
     }
 
     fn build_string_literal_token(&self, cursor: &mut Cursor) -> Result<Token, ScanningError> {
-        while self.peek(cursor) != '"' && !self.is_at_end_of_input(cursor) {
+        //while self.peek(cursor) != '"' && !self.is_at_end_of_input(cursor) {
+        while self.peek(cursor) != '"' && !cursor.is_at_end_of_input(&self.source) {
             if self.peek(cursor) == '\n' { cursor.current_line += 1; }
             self.advance(cursor);
         }
 
-        if self.is_at_end_of_input(cursor) {
+        //if self.is_at_end_of_input(cursor) {
+        if cursor.is_at_end_of_input(&self.source) {
             return Err(ScanningError::UnterminatedString {
                 line: cursor.current_line,
                 input: self.get_current_lexeme(Trim::None, cursor).to_string()
@@ -258,7 +269,8 @@ impl Scanner {
         let mut errors: Vec<ScanningError> = Vec::new();
         let mut cursor = Cursor::new();
 
-        while !self.is_at_end_of_input(&cursor) {
+        //while !self.is_at_end_of_input(&cursor) {
+        while !cursor.is_at_end_of_input(&self.source) {
             cursor.start_car = cursor.current_char;
             let cur_char = self.advance(&mut cursor);
 
