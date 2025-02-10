@@ -33,38 +33,40 @@ enum Trim {
     Both
 }
 
-struct Cursor {
+struct Cursor<'a> {
+    source: &'a str,
     start_car: u16,
     current_char: u16,
     current_line: u16
 }
 
-impl Cursor {
-    pub fn new() -> Self {
+impl<'a> Cursor<'a> {
+    pub fn new(source: &'a str) -> Self {
         Cursor {
+            source,
             start_car: 0,
             current_char: 0,
             current_line: 1
         }
     }
 
-    pub fn is_at_end_of_input(&self, source: &str) -> bool {
-        self.current_char >= source.chars().count() as u16
+    pub fn is_at_end_of_input(&self) -> bool {
+        self.current_char >= self.source.chars().count() as u16
     }
 
-    fn peek(&self, source: &str) -> char {
-        if self.is_at_end_of_input(source) {
+    fn peek(&self) -> char {
+        if self.is_at_end_of_input() {
             '\0'
         } else {
-            source.chars().nth(self.current_char as usize).unwrap_or('\0')
+            self.source.chars().nth(self.current_char as usize).unwrap_or('\0')
         }
     }
 
-    fn peek_next(&self, source: &str) -> char {
-        if self.current_char + 1 >= source.chars().count() as u16 {
+    fn peek_next(&self) -> char {
+        if self.current_char + 1 >= self.source.chars().count() as u16 {
             '\0'
         } else {
-            source.chars().nth((self.current_char + 1) as usize).unwrap_or('\0')
+            self.source.chars().nth((self.current_char + 1) as usize).unwrap_or('\0')
         }
     }
 }
@@ -106,7 +108,7 @@ impl Scanner {
     }
 
     fn match_char(&self, expected: char, cursor: &mut Cursor) -> bool {
-        if cursor.is_at_end_of_input(&self.source) {
+        if cursor.is_at_end_of_input() {
             return false;
         }
 
@@ -142,7 +144,7 @@ impl Scanner {
     }
 
     fn build_comment_token(&self, cursor: &mut Cursor) -> Token {
-        while cursor.peek(&self.source) != '\n' && !cursor.is_at_end_of_input(&self.source) {
+        while cursor.peek() != '\n' && !cursor.is_at_end_of_input() {
             self.advance(cursor);
         }
 
@@ -167,12 +169,12 @@ impl Scanner {
     }
 
     fn build_string_literal_token(&self, cursor: &mut Cursor) -> Result<Token, ScanningError> {
-        while cursor.peek(&self.source) != '"' && !cursor.is_at_end_of_input(&self.source) {
-            if cursor.peek(&self.source) == '\n' { cursor.current_line += 1; }
+        while cursor.peek() != '"' && !cursor.is_at_end_of_input() {
+            if cursor.peek() == '\n' { cursor.current_line += 1; }
             self.advance(cursor);
         }
 
-        if cursor.is_at_end_of_input(&self.source) {
+        if cursor.is_at_end_of_input() {
             return Err(ScanningError::UnterminatedString {
                 line: cursor.current_line,
                 input: self.get_current_lexeme(Trim::None, cursor).to_string()
@@ -190,12 +192,12 @@ impl Scanner {
     }
 
     fn build_numeric_literal_token(&self, cursor: &mut Cursor) -> Token {
-        while cursor.peek(&self.source).is_ascii_digit() { self.advance(cursor); }
+        while cursor.peek().is_ascii_digit() { self.advance(cursor); }
 
-        if cursor.peek(&self.source) == '.' && cursor.peek_next(&self.source).is_ascii_digit() {
+        if cursor.peek() == '.' && cursor.peek_next().is_ascii_digit() {
             self.advance(cursor);
 
-            while cursor.peek(&self.source).is_ascii_digit() { self.advance(cursor); }
+            while cursor.peek().is_ascii_digit() { self.advance(cursor); }
         }
 
         let lexeme = self.get_current_lexeme(Trim::None, cursor);
@@ -208,7 +210,7 @@ impl Scanner {
     }
 
     fn build_keyword_or_identifier_token(&self, cursor: &mut Cursor) -> Token {
-        while cursor.peek(&self.source).is_ascii_alphanumeric() || cursor.peek(&self.source) == '_' { self.advance(cursor); }
+        while cursor.peek().is_ascii_alphanumeric() || cursor.peek() == '_' { self.advance(cursor); }
 
         let lexeme = self.get_current_lexeme(Trim::None, cursor).to_string();
         let token_type = *self.keyword_map.get(&lexeme).unwrap_or(&TokenType::Identifier);
@@ -252,9 +254,9 @@ impl Scanner {
     pub fn scan_tokens(&mut self) -> Result<Vec<Token>, (Vec<Token>, Vec<ScanningError>)> {
         let mut tokens: Vec<Token> = Vec::new();
         let mut errors: Vec<ScanningError> = Vec::new();
-        let mut cursor = Cursor::new();
+        let mut cursor = Cursor::new(&self.source);
 
-        while !cursor.is_at_end_of_input(&self.source) {
+        while !cursor.is_at_end_of_input() {
             cursor.start_car = cursor.current_char;
             let cur_char = self.advance(&mut cursor);
 
