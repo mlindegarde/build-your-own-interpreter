@@ -63,7 +63,7 @@ fn should_return_slash_when_not_part_of_comment() {
 fn should_handle_empty_space_when_file_contains_it() {
     let mut scanner = Scanner::new(String::from(" \n\r\t\t(\n(\n"));
     let tokens = scanner.scan_tokens().unwrap_or(Vec::new());
-    let TokenData::Reserved {lexeme } = &tokens.first().unwrap().token_data else { panic!("Token should be Standard")};
+    let TokenData::Reserved {lexeme } = tokens.first().unwrap().token_data else { panic!("Token should be Standard")};
 
     assert_eq!(tokens.len(), 3);
     assert_eq!(lexeme, "(");

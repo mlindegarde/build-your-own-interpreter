@@ -117,7 +117,7 @@ impl Scanner {
         }
     }
 
-    fn get_current_lexeme(&self, trim: Trim, cursor: &Cursor) -> String {
+    fn get_current_lexeme(&self, trim: Trim, cursor: &Cursor) -> &str {
         let start = match trim {
             Trim::None => cursor.start_car,
             Trim::Both => cursor.start_car + 1
@@ -128,7 +128,7 @@ impl Scanner {
             Trim::Both => cursor.current_char - 1
         } as usize;
 
-        self.source[start .. end].to_string()
+        &self.source[start .. end]
     }
 
     fn is_at_end_of_input(&self, cursor: &Cursor) -> bool {
@@ -137,7 +137,7 @@ impl Scanner {
         cursor.current_char >= self.source.chars().count() as u16
     }
 
-    fn build_token(&self, token_type: TokenType, token_data: TokenData, cursor: &Cursor) -> Token {
+    fn build_token<'a>(&self, token_type: TokenType, token_data: TokenData<'a>, cursor: &Cursor) -> Token<'a> {
         Token::new(cursor.current_line, token_type, token_data)
     }
 
@@ -179,7 +179,7 @@ impl Scanner {
         if self.is_at_end_of_input(cursor) {
             return Err(ScanningError::UnterminatedString {
                 line: cursor.current_line,
-                input: self.get_current_lexeme(Trim::None, cursor)
+                input: self.get_current_lexeme(Trim::None, cursor).to_string()
             });
         }
 
@@ -187,8 +187,8 @@ impl Scanner {
         Ok(self.build_token(
             TokenType::String,
             TokenData::StringLiteral {
-                lexeme: self.get_current_lexeme(Trim::None, cursor),
-                literal: self.get_current_lexeme(Trim::Both, cursor)
+                lexeme: self.get_current_lexeme(Trim::None, cursor).to_string(),
+                literal: self.get_current_lexeme(Trim::Both, cursor).to_string()
             },
             cursor))
     }
@@ -202,7 +202,7 @@ impl Scanner {
             while self.peek(cursor).is_ascii_digit() { self.advance(cursor); }
         }
 
-        let lexeme = self.get_current_lexeme(Trim::None, cursor);
+        let lexeme = self.get_current_lexeme(Trim::None, cursor).to_string();
         let literal = lexeme.parse::<f64>().unwrap();
 
         self.build_token(
@@ -214,7 +214,7 @@ impl Scanner {
     fn build_keyword_or_identifier_token(&self, cursor: &mut Cursor) -> Token {
         while self.peek(cursor).is_ascii_alphanumeric() || self.peek(cursor) == '_' { self.advance(cursor); }
 
-        let lexeme = self.get_current_lexeme(Trim::None, cursor);
+        let lexeme = self.get_current_lexeme(Trim::None, cursor).to_string();
         let token_type = *self.keyword_map.get(&lexeme).unwrap_or(&TokenType::Identifier);
 
         self.build_reserved_token(token_type, cursor)
@@ -226,7 +226,7 @@ impl Scanner {
             character: current_char }
     }
 
-    fn scan_token(&mut self, current_char: char, cursor: &mut Cursor) -> Result<Token, ScanningError> {
+    fn scan_token(&self, current_char: char, cursor: &mut Cursor) -> Result<Token, ScanningError> {
         match current_char {
             '(' => Ok(self.build_reserved_token(TokenType::LeftParen, cursor)),
             ')' => Ok(self.build_reserved_token(TokenType::RightParen, cursor)),

@@ -60,8 +60,8 @@ impl Eq for TokenType {}
 //** TOKEN DATA ENUM **************************************************************************************************
 
 #[derive(Debug, Clone)]
-pub enum TokenData {
-    Reserved { lexeme: String },
+pub enum TokenData<'a> {
+    Reserved { lexeme: &'a str },
     StringLiteral { lexeme: String, literal: String },
     NumericLiteral { lexeme: String, literal: f64 },
     Terminal, Comment
@@ -71,14 +71,14 @@ pub enum TokenData {
 
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
-pub struct Token {
+pub struct Token<'a> {
     pub line: u16,
     pub token_type: TokenType,
-    pub token_data: TokenData
+    pub token_data: TokenData<'a>
 }
 
-impl Token {
-    pub fn new(line: u16, token_type: TokenType, token: TokenData) -> Self {
+impl<'a> Token<'a> {
+    pub fn new(line: u16, token_type: TokenType, token: TokenData<'a>) -> Self {
         Token {
             line,
             token_type,
@@ -87,7 +87,7 @@ impl Token {
     }
 }
 
-impl fmt::Display for Token {
+impl<'a> fmt::Display for Token<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match &self.token_data {
             TokenData::Reserved { lexeme } => write!(f, "{} {} null", self.token_type, lexeme),
