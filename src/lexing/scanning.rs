@@ -69,6 +69,13 @@ impl<'a> Cursor<'a> {
             self.source.chars().nth((self.current_char + 1) as usize).unwrap_or('\0')
         }
     }
+
+    fn advance(&mut self) -> char {
+        let value = self.source.chars().nth(self.current_char as usize).unwrap();
+        self.current_char += 1;
+
+        value
+    }
 }
 
 pub struct Scanner {
@@ -100,12 +107,7 @@ impl Scanner {
         }
     }
 
-    fn advance(&self, cursor: &mut Cursor) -> char {
-        let value = self.source.chars().nth(cursor.current_char as usize).unwrap();
-        cursor.current_char += 1;
 
-        value
-    }
 
     fn match_char(&self, expected: char, cursor: &mut Cursor) -> bool {
         if cursor.is_at_end_of_input() {
@@ -145,7 +147,7 @@ impl Scanner {
 
     fn build_comment_token(&self, cursor: &mut Cursor) -> Token {
         while cursor.peek() != '\n' && !cursor.is_at_end_of_input() {
-            self.advance(cursor);
+            cursor.advance();
         }
 
         self.build_token(TokenType::Comment, TokenData::Comment, cursor)
@@ -171,7 +173,7 @@ impl Scanner {
     fn build_string_literal_token(&self, cursor: &mut Cursor) -> Result<Token, ScanningError> {
         while cursor.peek() != '"' && !cursor.is_at_end_of_input() {
             if cursor.peek() == '\n' { cursor.current_line += 1; }
-            self.advance(cursor);
+            cursor.advance();
         }
 
         if cursor.is_at_end_of_input() {
@@ -181,7 +183,7 @@ impl Scanner {
             });
         }
 
-        self.advance(cursor);
+        cursor.advance();
         Ok(self.build_token(
             TokenType::String,
             TokenData::StringLiteral {
@@ -192,12 +194,12 @@ impl Scanner {
     }
 
     fn build_numeric_literal_token(&self, cursor: &mut Cursor) -> Token {
-        while cursor.peek().is_ascii_digit() { self.advance(cursor); }
+        while cursor.peek().is_ascii_digit() { cursor.advance(); }
 
         if cursor.peek() == '.' && cursor.peek_next().is_ascii_digit() {
-            self.advance(cursor);
+            cursor.advance();
 
-            while cursor.peek().is_ascii_digit() { self.advance(cursor); }
+            while cursor.peek().is_ascii_digit() { cursor.advance(); }
         }
 
         let lexeme = self.get_current_lexeme(Trim::None, cursor);
@@ -210,7 +212,7 @@ impl Scanner {
     }
 
     fn build_keyword_or_identifier_token(&self, cursor: &mut Cursor) -> Token {
-        while cursor.peek().is_ascii_alphanumeric() || cursor.peek() == '_' { self.advance(cursor); }
+        while cursor.peek().is_ascii_alphanumeric() || cursor.peek() == '_' { cursor.advance(); }
 
         let lexeme = self.get_current_lexeme(Trim::None, cursor).to_string();
         let token_type = *self.keyword_map.get(&lexeme).unwrap_or(&TokenType::Identifier);
@@ -258,7 +260,7 @@ impl Scanner {
 
         while !cursor.is_at_end_of_input() {
             cursor.start_car = cursor.current_char;
-            let cur_char = self.advance(&mut cursor);
+            let cur_char = cursor.advance();
 
             match self.scan_token(cur_char, &mut cursor) {
                 Ok(token) => match token.token_type {
