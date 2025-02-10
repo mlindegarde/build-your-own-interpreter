@@ -187,8 +187,8 @@ impl Scanner {
         Ok(self.build_token(
             TokenType::String,
             TokenData::StringLiteral {
-                lexeme: self.get_current_lexeme(Trim::None, cursor).to_string(),
-                literal: self.get_current_lexeme(Trim::Both, cursor).to_string()
+                lexeme: self.get_current_lexeme(Trim::None, cursor),
+                literal: self.get_current_lexeme(Trim::Both, cursor)
             },
             cursor))
     }

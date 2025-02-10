@@ -90,7 +90,7 @@ fn should_handle_string_literals() {
         vec![TokenType::String, TokenType::Eof]
     );
 
-    let TokenData::StringLiteral {lexeme, literal } = &tokens.first().unwrap().token_data
+    let TokenData::StringLiteral {lexeme, literal } = tokens.first().unwrap().token_data
     else { panic!("Token should be Standard")};
 
     assert_eq!(lexeme, "\"Hello, world!\"");
