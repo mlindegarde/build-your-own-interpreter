@@ -9,7 +9,7 @@ use exitcode::ExitCode;
 
 extern crate exitcode;
 use crate::lexing::tokenizing::tokenize_file;
-
+use crate::parsing::parsing::parse_file;
 //** VALIDATION ERRORS *************************************************************************************************
 
 enum ValidationError {

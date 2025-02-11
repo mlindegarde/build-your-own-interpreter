@@ -85,6 +85,16 @@ impl<'a> Token<'a> {
             token_data: token
         }
     }
+
+    pub fn get_name(&self) -> String {
+        match &self.token_data {
+            TokenData::Reserved { lexeme } |
+            TokenData::StringLiteral { lexeme, literal: _ } |
+            TokenData::NumericLiteral { lexeme, literal: _} => String::from(*lexeme),
+            TokenData::Terminal |
+            TokenData::Comment => String::new()
+        }
+    }
 }
 
 impl fmt::Display for Token<'_> {
