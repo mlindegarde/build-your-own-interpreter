@@ -87,7 +87,7 @@ impl<'a> Token<'a> {
     }
 }
 
-impl<'a> fmt::Display for Token<'a> {
+impl fmt::Display for Token<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match &self.token_data {
             TokenData::Reserved { lexeme } => write!(f, "{} {} null", self.token_type, lexeme),
@@ -100,13 +100,13 @@ impl<'a> fmt::Display for Token<'a> {
 
 //** TOKENIZING COMMAND LOGIC ******************************************************************************************
 
-fn display_tokens(tokens: &[Token]) {
+pub fn display_tokens(tokens: &[Token]) {
     for token_info in tokens {
         println!("{}", token_info);
     }
 }
 
-fn display_errors(errors: &[ScanningError]) {
+pub fn display_errors(errors: &[ScanningError]) {
     for error in errors {
         eprintln!("{}", error);
     }

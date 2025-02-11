@@ -1,4 +1,5 @@
 mod lexing;
+mod parsing;
 mod util;
 
 use std::{env, fmt};
@@ -35,7 +36,8 @@ impl fmt::Display for ValidationError {
 //** COMMANDS **********************************************************************************************************
 
 enum Command {
-    Tokenize
+    Tokenize,
+    Parse
 }
 
 /// FromStr does not have a lifetime parameter.  As a result, it can only parse types that
@@ -48,6 +50,7 @@ impl FromStr for Command {
     fn from_str(input: &str) -> Result<Command, ValidationError> {
         match input.to_lowercase().as_str() {
             "tokenize" => Ok(Command::Tokenize),
+            "parse" => Ok(Command::Parse),
             _ => Err(ValidationError::Command { provided_command: input.to_string()})
         }
     }
@@ -79,7 +82,8 @@ fn validate_input(args: &[String]) -> Result<(Command,&String), ValidationError>
 
 fn execute_command(command: &Command, filename: &str) -> ExitCode {
     match command {
-        Command::Tokenize => tokenize_file(filename)
+        Command::Tokenize => tokenize_file(filename),
+        Command::Parse => parse_file(filename)
     }
 }
 
@@ -96,7 +100,7 @@ fn handle_error(error: ValidationError) -> ExitCode {
 fn main() {
     std::process::exit(
         match validate_input(&env::args().collect::<Vec<String>>()) {
-            Err(error) => handle_error(error),
-            Ok((command, filename)) => execute_command(&command, filename)
+            Ok((command, filename)) => execute_command(&command, filename),
+            Err(error) => handle_error(error)
         });
 }
