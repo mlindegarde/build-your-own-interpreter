@@ -1,15 +1,15 @@
+extern crate exitcode;
 mod lexing;
 mod parsing;
 mod util;
 
-use std::{env, fmt};
+use exitcode::ExitCode;
 use std::fs;
 use std::str::FromStr;
-use exitcode::ExitCode;
+use std::{env, fmt};
 
-extern crate exitcode;
 use crate::lexing::tokenizing::tokenize_file;
-use crate::parsing::parsing::parse_file;
+use crate::parsing::parsing::build_abstract_syntax_tree;
 //** VALIDATION ERRORS *************************************************************************************************
 
 enum ValidationError {
@@ -83,7 +83,7 @@ fn validate_input(args: &[String]) -> Result<(Command,&String), ValidationError>
 fn execute_command(command: &Command, filename: &str) -> ExitCode {
     match command {
         Command::Tokenize => tokenize_file(filename),
-        Command::Parse => parse_file(filename)
+        Command::Parse => build_abstract_syntax_tree(filename)
     }
 }
 

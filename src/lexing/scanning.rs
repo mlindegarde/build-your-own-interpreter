@@ -7,6 +7,7 @@ use crate::lexing::tokenizing::{TokenData, Token, TokenType};
 //** SCANNING ERRORS. **************************************************************************************************
 
 #[allow(dead_code)]
+#[derive(Debug, Clone)]
 pub enum ScanningError {
     UnexpectedCharacter { line: u16, character: char },
     UnterminatedString { line: u16, input: String }

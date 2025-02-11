@@ -122,13 +122,8 @@ pub fn display_errors(errors: &[ScanningError]) {
     }
 }
 
-pub fn tokenize_file(filename: &str) -> ExitCode {
-    let file_contents = fs::read_to_string(filename).unwrap_or_else(|_| {
-        eprintln!("Failed to read file {}:  Defaulting to an empty string", filename);
-        String::new()
-    });
-
-    match Scanner::new(file_contents).scan_tokens() {
+fn handle_tokenize_results(results: Result<Vec<Token>, (Vec<Token>, Vec<ScanningError>)>) -> ExitCode {
+    match results {
         Ok(tokens) => {
             display_tokens(&tokens);
             exitcode::OK
@@ -139,4 +134,13 @@ pub fn tokenize_file(filename: &str) -> ExitCode {
             exitcode::DATAERR
         }
     }
+}
+
+pub fn tokenize_file(filename: &str) -> ExitCode {
+    let file_contents = fs::read_to_string(filename).unwrap_or_else(|_| {
+        eprintln!("Failed to read file {}:  Defaulting to an empty string", filename);
+        String::new()
+    });
+
+    handle_tokenize_results(Scanner::new(file_contents).scan_tokens())
 }
