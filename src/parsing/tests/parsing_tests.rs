@@ -20,3 +20,11 @@ fn should_generate_expected_output() {
     let output = format!("{}", expression);
     assert_eq!(output, "(* (- 123) (group 45.67))");
 }
+
+#[test]
+fn should_display_38_0() {
+    let expression = Expression::NumericLiteral { value: 38.0 };
+    let output = format!("{}", expression);
+
+    assert_eq!(output, "38.0");
+}

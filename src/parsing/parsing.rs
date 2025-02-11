@@ -37,7 +37,7 @@ impl fmt::Display for Expression<'_> {
                 write!(f, "{}", parenthesize(&operator.get_name(), vec![right]))
             },
             Expression::StringLiteral { value } => write!(f, "{}", value),
-            Expression::NumericLiteral { value } => write!(f, "{}", value),
+            Expression::NumericLiteral { value } => write!(f, "{:?}", value),
             Expression::Grouping { expression } => {
                 write!(f, "{}", parenthesize("group", vec![expression]))
             }
