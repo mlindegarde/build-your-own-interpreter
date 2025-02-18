@@ -1,5 +1,6 @@
+use crate::lexing::scanning::Scanner;
 use crate::lexing::tokenizing::{Token, TokenData, TokenType};
-use crate::parsing::parsing::Expression;
+use crate::parsing::parsing::{Expression, Parser};
 
 #[test]
 fn should_generate_expected_output() {
@@ -27,4 +28,52 @@ fn should_display_38_0() {
     let output = format!("{}", expression);
 
     assert_eq!(output, "38.0");
+}
+
+#[test]
+fn should_generate_the_correct_ast_for_numeric_comparison() {
+    let input = "1 < 3";
+    let expected_output = "(< 1.0 3.0)";
+
+    let mut scanner = Scanner::new(String::from(input));
+    let tokens = &scanner.scan_tokens().unwrap();
+
+    let parser = Parser::new(&tokens);
+    let ast = &parser.parse();
+
+    let ast_as_string = format!("{}", ast);
+
+    assert_eq!(ast_as_string, expected_output);
+}
+
+#[test]
+fn should_generate_the_correct_ast_for_string_comparison() {
+    let input = "\"a\" < \"b\"";
+    let expected_output = "(< a b)";
+
+    let mut scanner = Scanner::new(String::from(input));
+    let tokens = &scanner.scan_tokens().unwrap();
+
+    let parser = Parser::new(&tokens);
+    let ast = &parser.parse();
+
+    let ast_as_string = format!("{}", ast);
+
+    assert_eq!(ast_as_string, expected_output);
+}
+
+#[test]
+fn blah() {
+    let input = "\"bar\"!=\"baz\"";
+    let expected_output = "(!= bar baz)";
+
+    let mut scanner = Scanner::new(String::from(input));
+    let tokens = &scanner.scan_tokens().unwrap();
+
+    let parser = Parser::new(&tokens);
+    let ast = &parser.parse();
+
+    let ast_as_string = format!("{}", ast);
+
+    assert_eq!(ast_as_string, expected_output);
 }

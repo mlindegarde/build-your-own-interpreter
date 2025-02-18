@@ -102,7 +102,7 @@ impl<'a> Cursor<'a> {
     }
 }
 
-struct Parser<'a> {
+pub struct Parser<'a> {
     pub tokens: &'a Vec<Token<'a>>
 }
 
@@ -209,8 +209,8 @@ impl<'a> Parser<'a> {
         let mut expression = self.comparison(cursor);
 
         while cursor.match_token_type(vec![TokenType::BangEqual, TokenType::EqualEqual]) {
-            let right = self.comparison(cursor);
             let operator = &self.tokens[(cursor.current_index-1) as usize];
+            let right = self.comparison(cursor);
 
             expression = Expression::Binary {
                 left: Box::from(expression),
@@ -226,7 +226,7 @@ impl<'a> Parser<'a> {
         self.equality(cursor)
     }
 
-    fn parse(&self) -> Expression {
+    pub fn parse(&self) -> Expression {
         let mut cursor = Cursor::new(&self.tokens);
 
         self.expression(&mut cursor)
