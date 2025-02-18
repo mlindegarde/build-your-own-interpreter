@@ -154,8 +154,8 @@ impl Scanner {
     fn build_keyword_or_identifier_token(&self, caret: &mut Caret) -> Token {
         while caret.peek().is_ascii_alphanumeric() || caret.peek() == '_' { caret.advance(); }
 
-        let lexeme = self.get_current_lexeme(Trim::None, caret).to_string();
-        let token_type = *self.keyword_map.get(&lexeme).unwrap_or(&TokenType::Identifier);
+        let lexeme = self.get_current_lexeme(Trim::None, caret);
+        let token_type = *self.keyword_map.get(lexeme).unwrap_or(&TokenType::Identifier);
 
         self.build_reserved_token(token_type, caret)
     }

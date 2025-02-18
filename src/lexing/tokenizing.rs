@@ -87,10 +87,10 @@ impl<'a> Token<'a> {
     }
 
     pub fn get_name(&self) -> String {
-        match &self.token_data {
+        match self.token_data {
             TokenData::Reserved { lexeme } |
             TokenData::StringLiteral { lexeme, literal: _ } |
-            TokenData::NumericLiteral { lexeme, literal: _} => String::from(*lexeme),
+            TokenData::NumericLiteral { lexeme, literal: _} => String::from(lexeme),
             TokenData::Terminal |
             TokenData::Comment => String::new()
         }
@@ -99,7 +99,7 @@ impl<'a> Token<'a> {
 
 impl fmt::Display for Token<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match &self.token_data {
+        match self.token_data {
             TokenData::Reserved { lexeme } => write!(f, "{} {} null", self.token_type, lexeme),
             TokenData::StringLiteral { lexeme, literal } => write!(f, "{} {} {}", self.token_type, lexeme, literal),
             TokenData::NumericLiteral { lexeme, literal } => write!(f, "{} {} {:?}", self.token_type, lexeme, literal),

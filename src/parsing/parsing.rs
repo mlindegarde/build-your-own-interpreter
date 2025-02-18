@@ -29,7 +29,7 @@ fn parenthesize(name: &str, expressions: Vec<&Expression>) -> String {
 
 impl fmt::Display for Expression<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match &self {
+        match self {
             Expression::Binary { left, operator, right } => {
                 write!(f, "{}", parenthesize(&operator.get_name(), vec![left, right]))
             },
