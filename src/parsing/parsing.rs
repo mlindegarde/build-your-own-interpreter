@@ -204,6 +204,7 @@ impl<'a> Parser<'a> {
     }
 
 
+    // force tests to run
     fn equality(&self, cursor: &mut Cursor) -> Expression {
         let mut expression = self.comparison(cursor);
 
