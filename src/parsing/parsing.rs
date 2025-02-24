@@ -119,7 +119,7 @@ impl<'a> Cursor<'a> {
     }
 
     fn report(&self, line_number: u16, desc: &str, message: &str) {
-        println!("[line {}] Desc: {}, Error: {}", line_number, desc, message);
+        //println!("[line {}] Desc: {}, Error: {}", line_number, desc, message);
     }
 
     /*
