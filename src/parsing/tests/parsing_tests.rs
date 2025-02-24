@@ -39,7 +39,7 @@ fn should_generate_the_correct_ast_for_numeric_comparison() {
     let tokens = &scanner.scan_tokens().unwrap();
 
     let parser = Parser::new(&tokens);
-    let ast = &parser.parse();
+    let ast = &parser.parse().unwrap();
 
     let ast_as_string = format!("{}", ast);
 
@@ -55,7 +55,7 @@ fn should_generate_the_correct_ast_for_string_comparison() {
     let tokens = &scanner.scan_tokens().unwrap();
 
     let parser = Parser::new(&tokens);
-    let ast = &parser.parse();
+    let ast = &parser.parse().unwrap();
 
     let ast_as_string = format!("{}", ast);
 
@@ -63,7 +63,7 @@ fn should_generate_the_correct_ast_for_string_comparison() {
 }
 
 #[test]
-fn blah() {
+fn should_generate_the_correct_ast_given_simple_bang_equals() {
     let input = "\"bar\"!=\"baz\"";
     let expected_output = "(!= bar baz)";
 
@@ -71,9 +71,22 @@ fn blah() {
     let tokens = &scanner.scan_tokens().unwrap();
 
     let parser = Parser::new(&tokens);
-    let ast = &parser.parse();
+    let ast = &parser.parse().unwrap();
 
     let ast_as_string = format!("{}", ast);
 
     assert_eq!(ast_as_string, expected_output);
+}
+
+#[test]
+fn should_handle_parsing_error() {
+    let input = "\"hello";
+
+    let mut scanner = Scanner::new(String::from(input));
+    let tokens = &scanner.scan_tokens().unwrap();
+
+    let parser = Parser::new(&tokens);
+    let result = &parser.parse();
+
+    assert_eq!(result.is_err(), true);
 }

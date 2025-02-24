@@ -158,51 +158,59 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn primary(&self, cursor: &mut Cursor) -> Expression {
-        if cursor.match_token_type(vec![TokenType::False]) { return Expression::StringLiteral { value: "false" } };
-        if cursor.match_token_type(vec![TokenType::True]) { return Expression::StringLiteral { value: "true" } };
-        if cursor.match_token_type(vec![TokenType::Nil]) { return Expression::StringLiteral { value: "nil" } };
+    fn primary(&self, cursor: &mut Cursor) -> Result<Expression, ParsingError> {
+        if cursor.match_token_type(vec![TokenType::False]) { return Ok(Expression::StringLiteral { value: "false" }) };
+        if cursor.match_token_type(vec![TokenType::True]) { return Ok(Expression::StringLiteral { value: "true" }) };
+        if cursor.match_token_type(vec![TokenType::Nil]) { return Ok(Expression::StringLiteral { value: "nil" }) };
 
         if cursor.match_token_type(vec![TokenType::Number, TokenType::String]) {
             let previous_token = &self.tokens[(cursor.current_index-1) as usize];
 
             return match previous_token.token_data {
-                TokenData::StringLiteral { lexeme: _, literal } => Expression::StringLiteral { value: literal },
-                TokenData::NumericLiteral { lexeme: _, literal } => Expression::NumericLiteral { value: literal },
+                TokenData::StringLiteral { lexeme: _, literal } => Ok(Expression::StringLiteral { value: literal }),
+                TokenData::NumericLiteral { lexeme: _, literal } => Ok(Expression::NumericLiteral { value: literal }),
                 _ => panic!("adf")
             };
         }
 
         if cursor.match_token_type(vec![TokenType::LeftParen]) {
-            let expression = self.expression(cursor);
-            cursor.consume(TokenType::RightParen, "Expect ')' after expression.").expect("");
-            return Expression::Grouping {  expression: Box::from(expression) }
+            let expression = self.expression(cursor)?;
+
+            return match cursor.consume(TokenType::RightParen, "Expect ')' after expression.") {
+                Ok(_) => {
+                    Ok(Expression::Grouping {  expression: Box::from(expression) })
+                },
+                Err(_) => {
+                    //cursor.error(cursor.peek(), "Expect ')' after expression.");
+                    return Err(ParsingError::ExpectedExpression)
+                }
+            }
         }
 
         cursor.error(cursor.peek(), "Expect expression.");
-        panic!("");
+        Err(ParsingError::ExpectedExpression)
     }
 
-    fn unary(&self, cursor: &mut Cursor) -> Expression {
+    fn unary(&self, cursor: &mut Cursor) -> Result<Expression, ParsingError> {
         if cursor.match_token_type(vec![TokenType::Bang, TokenType::Minus]) {
             let operator = &self.tokens[(cursor.current_index-1) as usize];
-            let right = self.unary(cursor);
+            let right = self.unary(cursor)?;
 
-            return Expression::Unary {
+            return Ok(Expression::Unary {
                 operator,
                 right: Box::from(right)
-            }
+            });
         }
 
         self.primary(cursor)
     }
 
-    fn factor(&self, cursor: &mut Cursor) -> Expression {
-        let mut expression = self.unary(cursor);
+    fn factor(&self, cursor: &mut Cursor) -> Result<Expression, ParsingError> {
+        let mut expression = self.unary(cursor)?;
 
         while cursor.match_token_type(vec![TokenType::Slash, TokenType::Star]) {
             let operator = &self.tokens[(cursor.current_index-1) as usize];
-            let right = self.unary(cursor);
+            let right = self.unary(cursor)?;
             expression = Expression::Binary {
                 left: Box::from(expression),
                 operator,
@@ -210,16 +218,16 @@ impl<'a> Parser<'a> {
             }
         }
 
-        expression
+        Ok(expression)
     }
 
 
-    fn term(&self, cursor: &mut Cursor) -> Expression {
-        let mut expression = self.factor(cursor);
+    fn term(&self, cursor: &mut Cursor) -> Result<Expression, ParsingError> {
+        let mut expression = self.factor(cursor)?;
 
         while cursor.match_token_type(vec![TokenType::Minus, TokenType::Plus]) {
             let operator = &self.tokens[(cursor.current_index-1) as usize];
-            let right = self.factor(cursor);
+            let right = self.factor(cursor)?;
             expression = Expression::Binary {
                 left: Box::from(expression),
                 operator,
@@ -227,17 +235,16 @@ impl<'a> Parser<'a> {
             }
         }
 
-        expression
+        Ok(expression)
     }
 
-
-    fn comparison(&self, cursor: &mut Cursor) -> Expression {
-        let mut expression = self.term(cursor);
+    fn comparison(&self, cursor: &mut Cursor) -> Result<Expression, ParsingError> {
+        let mut expression = self.term(cursor)?;
         //let mut expression = Expression::Literal { value: "" };
 
         while cursor.match_token_type(vec![TokenType::Greater, TokenType::GreaterEqual, TokenType::Less, TokenType::LessEqual]) {
             let operator = &self.tokens[(cursor.current_index-1) as usize];
-            let right = self.term(cursor);
+            let right = self.term(cursor)?;
             //let right = Expression::Literal { value: "" };
             expression = Expression::Binary {
                 left: Box::from(expression),
@@ -246,17 +253,16 @@ impl<'a> Parser<'a> {
             }
         }
 
-        expression
+        Ok(expression)
     }
 
-
     // force tests to run
-    fn equality(&self, cursor: &mut Cursor) -> Expression {
-        let mut expression = self.comparison(cursor);
+    fn equality(&self, cursor: &mut Cursor) -> Result<Expression, ParsingError> {
+        let mut expression = self.comparison(cursor)?;
 
         while cursor.match_token_type(vec![TokenType::BangEqual, TokenType::EqualEqual]) {
             let operator = &self.tokens[(cursor.current_index-1) as usize];
-            let right = self.comparison(cursor);
+            let right = self.comparison(cursor)?;
 
             expression = Expression::Binary {
                 left: Box::from(expression),
@@ -265,14 +271,14 @@ impl<'a> Parser<'a> {
             }
         }
 
-        expression
+        Ok(expression)
     }
 
-    fn expression(&self, cursor: &mut Cursor) -> Expression {
+    fn expression(&self, cursor: &mut Cursor) -> Result<Expression, ParsingError> {
         self.equality(cursor)
     }
 
-    pub fn parse(&self) -> Expression {
+    pub fn parse(&self) -> Result<Expression, ParsingError> {
         let mut cursor = Cursor::new(&self.tokens);
 
         self.expression(&mut cursor)
@@ -291,10 +297,26 @@ pub fn build_abstract_syntax_tree(filename: &str) -> ExitCode {
     });
 
     let mut scanner = Scanner::new(file_contents);
-    let tokens = &scanner.scan_tokens().unwrap();
+    let result = &scanner.scan_tokens();
 
-    let parser = Parser::new(&tokens);
-    let ast = &parser.parse();
+    match result {
+        Ok(tokens) => {
+            let parser = Parser::new(&tokens);
+            let result = &parser.parse();
 
-    handle_parse_results(&ast)
+            match result {
+                Ok(ast) => {
+                    handle_parse_results(&ast)
+                },
+                Err(_) => {
+                    println!("aaah");
+                    exitcode::DATAERR
+                }
+            }
+        },
+        Err(_) => {
+            eprintln!("Failed to scan tokens");
+            return exitcode::DATAERR;
+        }
+    }
 }
