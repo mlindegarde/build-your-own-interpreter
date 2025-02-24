@@ -80,7 +80,7 @@ fn should_generate_the_correct_ast_given_simple_bang_equals() {
 
 #[test]
 fn should_handle_parsing_error() {
-    let input = "\"hello";
+    let input = "if (bat == frog";
 
     let mut scanner = Scanner::new(String::from(input));
     let tokens = &scanner.scan_tokens().unwrap();
