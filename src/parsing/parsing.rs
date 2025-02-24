@@ -3,6 +3,13 @@ use crate::lexing::tokenizing::{Token, TokenData, TokenType};
 use exitcode::ExitCode;
 use std::{fmt, fs};
 
+#[allow(dead_code)]
+#[derive(Debug, Clone)]
+pub enum ParsingError {
+    ExpectedExpression,
+    UnexpectedToken
+}
+
 #[derive(Debug, Clone)]
 pub enum Expression<'a> {
     Binary { left: Box<Expression<'a>>, operator: &'a Token<'a>, right: Box<Expression<'a>> },
@@ -94,12 +101,50 @@ impl<'a> Cursor<'a> {
         false
     }
 
-    fn consume(&mut self, token_type: TokenType, message: &str) -> &Token {
-        if self.check(token_type) { return self.advance() }
+    fn consume(&mut self, token_type: TokenType, message: &str) -> Result<&Token,ParsingError> {
+        if self.check(token_type) { return Ok(self.advance()); }
 
-        println!("{}", message);
-        self.peek()
+        self.error(self.peek(), message);
+        //Err(ExitCode::from(65));
+
+        Err(ParsingError::UnexpectedToken)
     }
+
+    fn error(&self, token: &Token, message: &str) {
+       if token.token_type == TokenType::Eof {
+           self.report(token.line, "at end", message);
+       } else {
+           self.report(token.line, &format!("at '{}'", token.get_name()), message);
+        }
+    }
+
+    fn report(&self, line_number: u16, desc: &str, message: &str) {
+        println!("[line {}] Desc: {}, Error: {}", line_number, desc, message);
+    }
+
+    /*
+    fn synchronize(&mut self) {
+        self.advance();
+
+        while !self.is_at_end() {
+            if self.previous().token_type == TokenType::Semicolon { return; }
+
+            match self.peek().token_type {
+                TokenType::Class |
+                TokenType::Fun |
+                TokenType::Var |
+                TokenType::For |
+                TokenType::If |
+                TokenType::While |
+                TokenType::Print |
+                TokenType::Return => return,
+                _ => {}
+            }
+
+            self.advance();
+        }
+    }
+    */
 }
 
 pub struct Parser<'a> {
@@ -130,10 +175,11 @@ impl<'a> Parser<'a> {
 
         if cursor.match_token_type(vec![TokenType::LeftParen]) {
             let expression = self.expression(cursor);
-            cursor.consume(TokenType::RightParen, "Expect ')' after expression.");
+            cursor.consume(TokenType::RightParen, "Expect ')' after expression.").expect("");
             return Expression::Grouping {  expression: Box::from(expression) }
         }
 
+        cursor.error(cursor.peek(), "Expect expression.");
         panic!("");
     }
 
