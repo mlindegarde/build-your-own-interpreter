@@ -309,14 +309,14 @@ pub fn build_abstract_syntax_tree(filename: &str) -> ExitCode {
                     handle_parse_results(&ast)
                 },
                 Err(_) => {
-                    println!("aaah");
+                    //println!("aaah");
                     exitcode::DATAERR
                 }
             }
         },
         Err(_) => {
             eprintln!("Failed to scan tokens");
-            return exitcode::DATAERR;
+            exitcode::DATAERR
         }
     }
 }
