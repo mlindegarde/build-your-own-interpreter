@@ -101,7 +101,7 @@ fn validate_input(args: &[String]) -> Result<(Command, &String), ValidationError
 
 fn execute_command(command: Command, filename: &str) -> Result<ExitCode, InterpreterError> {
     match command {
-        Command::Tokenize => tokenize_file(filename),
+        Command::Tokenize => tokenize_file(filename).inspect_err(|error| println!("{}", error)),
         Command::Parse => build_abstract_syntax_tree(filename),
         Command::Evaluate => evaluate_ast(filename)
     }
@@ -117,7 +117,6 @@ fn run() -> Result<i32, InterpreterError> {
 
 fn main() {
     exit(run().unwrap_or_else(|error| {
-        //println!("{}", error);
         error.exit_code
     }))
 }
