@@ -116,10 +116,8 @@ fn run() -> Result<i32, InterpreterError> {
 }
 
 fn main() {
-    let exit_code = match run() {
-        Ok(exit_code) => exit_code,
-        Err(error) => error.exit_code
-    };
-
-    exit(exit_code);
+    exit(run().unwrap_or_else(|error| {
+        eprintln!("{}", error);
+        error.exit_code
+    }))
 }
