@@ -117,7 +117,7 @@ fn run() -> Result<i32, InterpreterError> {
 
 fn main() {
     exit(run().unwrap_or_else(|error| {
-        eprintln!("{}", error);
+        println!("{}", error);
         error.exit_code
     }))
 }

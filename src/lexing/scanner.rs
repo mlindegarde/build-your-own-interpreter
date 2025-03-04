@@ -46,6 +46,7 @@ impl<'a> ScanningErrorSummary {
 
 impl fmt::Display for ScanningErrorSummary {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        /*
         let mut details = Vec::new();
 
         for error in &self.errors {
@@ -56,22 +57,22 @@ impl fmt::Display for ScanningErrorSummary {
             details.push(format!("{}", token_info));
         }
 
-
         write!(f, "{}", details.join("\n"))
+        */
 
-        /*
-        let details: String = self.tokens
+        let details: Vec<String> = self.errors
             .iter()
-            .map(|token| format!("{}\n", token))
+            .map(|token| format!("{}", token))
             .chain(
-                self.errors.iter()
-                    .map(|error| format!("{}\n", error))
+                self.tokens.iter()
+                    .map(|error| format!("{}", error))
+
             )
             .collect();
 
-        write!(f, "{}", details)
+        write!(f, "{}", details.join("\n"))
 
-         */
+
     }
 }
 
