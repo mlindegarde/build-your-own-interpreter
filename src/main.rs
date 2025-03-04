@@ -1,6 +1,7 @@
 extern crate exitcode;
 mod lexing;
 mod parsing;
+mod interpreting;
 mod util;
 
 use exitcode::ExitCode;
@@ -10,6 +11,7 @@ use std::{env, fmt};
 use std::process::{exit};
 use crate::lexing::tokenize_file;
 use crate::parsing::build_abstract_syntax_tree;
+use crate::interpreting::evaluate_ast;
 use crate::util::error_handling::{ExitCodeProvider, InterpreterError};
 
 //** VALIDATION ERRORS *************************************************************************************************
@@ -50,7 +52,8 @@ impl ExitCodeProvider for ValidationError {
 
 enum Command {
     Tokenize,
-    Parse
+    Parse,
+    Evaluate
 }
 
 /// FromStr does not have a lifetime parameter.  As a result, it can only parse types that
@@ -64,6 +67,7 @@ impl FromStr for Command {
         match input.to_lowercase().as_str() {
             "tokenize" => Ok(Command::Tokenize),
             "parse" => Ok(Command::Parse),
+            "evaluate" => Ok(Command::Evaluate),
             _ => Err(ValidationError::Command { provided_command: input.to_string()})
         }
     }
@@ -98,7 +102,8 @@ fn validate_input(args: &[String]) -> Result<(Command, &String), ValidationError
 fn execute_command(command: Command, filename: &str) -> Result<ExitCode, InterpreterError> {
     match command {
         Command::Tokenize => tokenize_file(filename),
-        Command::Parse => build_abstract_syntax_tree(filename)
+        Command::Parse => build_abstract_syntax_tree(filename),
+        Command::Evaluate => evaluate_ast(filename)
     }
 }
 

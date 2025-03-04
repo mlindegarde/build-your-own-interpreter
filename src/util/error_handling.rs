@@ -1,5 +1,6 @@
 use std::fmt;
 use exitcode::ExitCode;
+use crate::interpreting::evaluator::EvaluationError;
 use crate::lexing::scanner::ScanningErrorSummary;
 use crate::parsing::parser::ParsingError;
 use crate::ValidationError;
@@ -42,6 +43,12 @@ impl From<ScanningErrorSummary> for InterpreterError {
 
 impl From<ParsingError> for InterpreterError {
     fn from(value: ParsingError) -> Self {
+        InterpreterError::new(value.to_string(), value.get_exit_code())
+    }
+}
+
+impl From<EvaluationError> for InterpreterError {
+    fn from(value: EvaluationError) -> Self {
         InterpreterError::new(value.to_string(), value.get_exit_code())
     }
 }

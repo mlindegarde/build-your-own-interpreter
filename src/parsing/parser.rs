@@ -147,8 +147,8 @@ impl Parser {
     }
 
     pub fn parse(&self) -> Result<Expression, ParsingError> {
-        let mut cursor = Consumer::new(&self.tokens);
+        let mut consumer = Consumer::new(&self.tokens);
 
-        self.expression(&mut cursor)
+        self.expression(&mut consumer)
     }
 }
