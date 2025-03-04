@@ -24,6 +24,13 @@ impl fmt::Display for ParsingError {
 }
 
 impl ExitCodeProvider for ParsingError {
+    fn get_output(&self) -> Option<String> {
+        None
+    }
+
+    fn get_error_details(&self) -> Option<String> {
+        Some(format!("{}", self))
+    }
     fn get_exit_code(&self) -> ExitCode {
         match self {
             ParsingError::ExpectedExpression => ExitCode::from(65),

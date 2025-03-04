@@ -77,6 +77,24 @@ impl fmt::Display for ScanningErrorSummary {
 }
 
 impl ExitCodeProvider for ScanningErrorSummary {
+    fn get_output(&self) -> Option<String> {
+        let details: Vec<String> = self.tokens
+            .iter()
+            .map(|token| format!("{}", token))
+            .collect();
+
+        Some(details.join("\n"))
+    }
+
+    fn get_error_details(&self) -> Option<String> {
+        let details: Vec<String> = self.errors
+            .iter()
+            .map(|token| format!("{}", token))
+            .collect();
+
+        Some(details.join("\n"))
+    }
+    
     fn get_exit_code(&self) -> i32 {
         exitcode::DATAERR
     }

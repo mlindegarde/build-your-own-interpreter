@@ -39,6 +39,14 @@ impl fmt::Display for ValidationError {
 }
 
 impl ExitCodeProvider for ValidationError {
+    fn get_output(&self) -> Option<String> {
+        None
+    }
+
+    fn get_error_details(&self) -> Option<String> {
+        Some(format!("{}", self))
+    }
+
     fn get_exit_code(&self) -> ExitCode {
         match self {
             ValidationError::ArgumentCount { .. } => exitcode::USAGE,
@@ -101,8 +109,8 @@ fn validate_input(args: &[String]) -> Result<(Command, &String), ValidationError
 
 fn execute_command(command: Command, filename: &str) -> Result<ExitCode, InterpreterError> {
     match command {
-        Command::Tokenize => tokenize_file(filename).inspect_err(|error| println!("{}", error)),
-        Command::Parse => build_abstract_syntax_tree(filename).inspect_err(|error| eprintln!("{}", error)),
+        Command::Tokenize => tokenize_file(filename),
+        Command::Parse => build_abstract_syntax_tree(filename),
         Command::Evaluate => evaluate_ast(filename)
     }
 }
@@ -117,6 +125,16 @@ fn run() -> Result<i32, InterpreterError> {
 
 fn main() {
     exit(run().unwrap_or_else(|error| {
+        match error.error_details {
+            Some(details) => eprintln!("{}", details),
+            None => {}
+        }
+
+        match error.output {
+            Some(output) => println!("{}", output),
+            None => {}
+        }
+
         error.exit_code
     }))
 }

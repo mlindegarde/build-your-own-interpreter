@@ -19,6 +19,14 @@ impl fmt::Display for EvaluationError {
 }
 
 impl ExitCodeProvider for EvaluationError {
+    fn get_output(&self) -> Option<String> {
+        None
+    }
+
+    fn get_error_details(&self) -> Option<String> {
+        Some(format!("{}", self))
+    }
+
     fn get_exit_code(&self) -> ExitCode {
         match self {
             EvaluationError::InvalidExpression => 1
