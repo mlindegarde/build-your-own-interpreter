@@ -58,6 +58,7 @@ impl Evaluator {
         }
     }
 
+    /*
     fn unary(&self,  expression: &Expression) -> Result<String, EvaluationError> {
         match expression {
             Expression::Unary { operator, right } => {
@@ -67,11 +68,12 @@ impl Evaluator {
             _ => Err(EvaluationError::InvalidExpression)
         }
     }
+    */
 
     fn evaluate_expression(&self, expression: &Expression) -> Result<String, EvaluationError> {
         match expression {
-            Expression::StringLiteral { value } => self.string_literal(expression),
-            Expression::NumericLiteral { value } => self.numeric_literal(expression),
+            Expression::StringLiteral { value: _ } => self.string_literal(expression),
+            Expression::NumericLiteral { value: _ } => self.numeric_literal(expression),
             Expression::Grouping { expression: inner_expression} => self.grouping(inner_expression),
             _ => Err(EvaluationError::InvalidExpression)
         }

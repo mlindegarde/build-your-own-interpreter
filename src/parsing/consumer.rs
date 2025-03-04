@@ -8,6 +8,7 @@ pub(crate) struct Consumer {
     pub current_index: u16
 }
 
+#[allow(dead_code)]
 impl<'a> Consumer {
     pub(crate) fn new(tokens: &Vec<Token>) -> Self {
         Consumer {
@@ -51,12 +52,12 @@ impl<'a> Consumer {
         false
     }
 
-    pub(crate) fn consume(&mut self, token_type: TokenType, message: &str) -> Result<&Token,ParsingError> {
+    pub(crate) fn consume(&mut self, token_type: TokenType, _message: &str) -> Result<&Token,ParsingError> {
         if self.check(token_type) { return Ok(self.advance()); }
 
-        self.error(self.peek(), message);
-        //Err(ExitCode::from(65));
-
+        // CodeCrafters does not want to see this output, so for the time being it is commented out.  This also means
+        // that the message parameter is never used.  To avoid compiler warnings, it is prefixed with an underscore.
+        //self.error(self.peek(), message);
         Err(ParsingError::UnexpectedToken)
     }
 
