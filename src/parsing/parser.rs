@@ -75,7 +75,7 @@ impl Parser {
             }
         }
 
-        consumer.error(consumer.peek(), "Expect expression.");
+        consumer.error(consumer.peek(), "Expected expression.");
         Err(ParsingError::ExpectedExpression)
     }
 
