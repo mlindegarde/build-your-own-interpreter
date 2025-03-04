@@ -1,5 +1,5 @@
-use crate::lexing::scanning::Scanner;
-use crate::lexing::tokenizing::{Token, TokenData, TokenType};
+use crate::lexing::scanner::Scanner;
+use crate::lexing::token::{Token, TokenData, TokenType};
 use crate::parsing::parser::{Parser};
 use crate::parsing::expression::{Expression};
 

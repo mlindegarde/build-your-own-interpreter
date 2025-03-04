@@ -1,4 +1,4 @@
-use crate::lexing::tokenizing::{Token, TokenData, TokenType};
+use crate::lexing::token::{Token, TokenData, TokenType};
 use exitcode::ExitCode;
 use std::{fmt};
 use crate::parsing::consumer::Consumer;

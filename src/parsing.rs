@@ -1,6 +1,6 @@
 use std::fs;
 use exitcode::ExitCode;
-use crate::lexing::scanning::Scanner;
+use crate::lexing::scanner::Scanner;
 use crate::parsing::parser::Parser;
 use crate::util::error_handling::InterpreterError;
 

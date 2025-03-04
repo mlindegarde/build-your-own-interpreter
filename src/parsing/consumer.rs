@@ -1,4 +1,4 @@
-use crate::lexing::tokenizing::{Token, TokenType};
+use crate::lexing::token::{Token, TokenType};
 use crate::parsing::parser::ParsingError;
 
 //** CONSUMER **********************************************************************************************************

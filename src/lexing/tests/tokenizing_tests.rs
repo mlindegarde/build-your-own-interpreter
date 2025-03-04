@@ -1,4 +1,4 @@
-use crate::lexing::tokenizing::TokenType;
+use crate::lexing::token::TokenType;
 
 #[test]
 fn should_convert_enum_name_to_upper_snake_case() {

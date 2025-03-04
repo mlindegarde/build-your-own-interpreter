@@ -1,6 +1,6 @@
 use std::fmt;
 use exitcode::ExitCode;
-use crate::lexing::scanning::ScanningErrorDetails;
+use crate::lexing::scanner::ScanningErrorSummary;
 use crate::parsing::parser::ParsingError;
 use crate::ValidationError;
 
@@ -34,8 +34,8 @@ impl From<ValidationError> for InterpreterError {
     }
 }
 
-impl From<ScanningErrorDetails> for InterpreterError {
-    fn from(value: ScanningErrorDetails) -> Self {
+impl From<ScanningErrorSummary> for InterpreterError {
+    fn from(value: ScanningErrorSummary) -> Self {
         InterpreterError::new(value.to_string(), value.get_exit_code())
     }
 }

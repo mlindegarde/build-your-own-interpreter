@@ -1,5 +1,5 @@
-use crate::lexing::scanning::{Scanner, ScanningError};
-use crate::lexing::tokenizing::{Token, TokenData, TokenType};
+use crate::lexing::scanner::{Scanner, ScanningError};
+use crate::lexing::token::{Token, TokenData, TokenType};
 
 #[test]
 fn should_return_eof_token_when_input_is_empty() {

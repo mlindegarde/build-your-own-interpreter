@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::fmt;
 use std::fmt::{Debug};
-use crate::lexing::caret::{Caret};
+use crate::lexing::consumer::{Consumer};
 use crate::lexing::token::{TokenData, Token, TokenType};
 use crate::util::error_handling::ExitCodeProvider;
 
@@ -66,7 +66,7 @@ impl ExitCodeProvider for ScanningErrorSummary {
     }
 }
 
-//** SCANNER AND SCANNER IMPLEMENTATION ********************************************************************************
+//** SCANNER ************************** ********************************************************************************
 
 enum Trim {
     None,
@@ -102,7 +102,7 @@ impl Scanner {
         }
     }
 
-    fn get_current_lexeme(&self, trim: Trim, caret: &Caret) -> &str {
+    fn get_current_lexeme(&self, trim: Trim, caret: &Consumer) -> &str {
         let start = match trim {
             Trim::None => caret.start_car,
             Trim::Both => caret.start_car + 1
@@ -116,15 +116,15 @@ impl Scanner {
         &self.source[start .. end]
     }
 
-    fn build_token(&self, token_type: TokenType, token_data: TokenData, caret: &Caret) -> Token {
+    fn build_token(&self, token_type: TokenType, token_data: TokenData, caret: &Consumer) -> Token {
         Token::new(caret.current_line, token_type, token_data)
     }
 
-    fn build_terminal_token(&self, caret: &Caret) -> Token {
+    fn build_terminal_token(&self, caret: &Consumer) -> Token {
         self.build_token(TokenType::Eof, TokenData::new_terminal(), caret)
     }
 
-    fn build_comment_token(&self, caret: &mut Caret) -> Token {
+    fn build_comment_token(&self, caret: &mut Consumer) -> Token {
         while caret.peek() != '\n' && !caret.is_at_end_of_input() {
             caret.advance();
         }
@@ -132,7 +132,7 @@ impl Scanner {
         self.build_token(TokenType::Comment, TokenData::Comment, caret)
     }
 
-    fn build_reserved_token(&self, token_type: TokenType, caret: &Caret) -> Token {
+    fn build_reserved_token(&self, token_type: TokenType, caret: &Consumer) -> Token {
         self.build_token(
             token_type,
             TokenData::new_reserved(self.get_current_lexeme(Trim::None, caret)),
@@ -144,13 +144,13 @@ impl Scanner {
         expected_char: char,
         match_token_type: TokenType,
         else_token_type: TokenType,
-        caret: &mut Caret) -> Token
+        caret: &mut Consumer) -> Token
     {
         let is_match = caret.match_char(expected_char);
         self.build_reserved_token(if is_match { match_token_type } else { else_token_type }, caret)
     }
 
-    fn build_string_literal_token(&self, caret: &mut Caret) -> Result<Token, ScanningError> {
+    fn build_string_literal_token(&self, caret: &mut Consumer) -> Result<Token, ScanningError> {
         while caret.peek() != '"' && !caret.is_at_end_of_input() {
             if caret.peek() == '\n' { caret.current_line += 1; }
             caret.advance();
@@ -173,7 +173,7 @@ impl Scanner {
             caret))
     }
 
-    fn build_numeric_literal_token(&self, caret: &mut Caret) -> Token {
+    fn build_numeric_literal_token(&self, caret: &mut Consumer) -> Token {
         while caret.peek().is_ascii_digit() { caret.advance(); }
 
         if caret.peek() == '.' && caret.peek_next().is_ascii_digit() {
@@ -192,7 +192,7 @@ impl Scanner {
             caret)
     }
 
-    fn build_keyword_or_identifier_token(&self, caret: &mut Caret) -> Token {
+    fn build_keyword_or_identifier_token(&self, caret: &mut Consumer) -> Token {
         while caret.peek().is_ascii_alphanumeric() || caret.peek() == '_' { caret.advance(); }
 
         let lexeme = self.get_current_lexeme(Trim::None, caret);
@@ -201,13 +201,13 @@ impl Scanner {
         self.build_reserved_token(token_type, caret)
     }
 
-    fn build_error(&self, current_char: char, caret: &Caret) -> ScanningError {
+    fn build_error(&self, current_char: char, caret: &Consumer) -> ScanningError {
         ScanningError::UnexpectedCharacter {
             line: caret.current_line,
             character: current_char }
     }
 
-    fn scan_token(&self, caret: &mut Caret) -> Result<Token, ScanningError> {
+    fn scan_token(&self, caret: &mut Consumer) -> Result<Token, ScanningError> {
         let current_char = caret.advance();
 
         match current_char {
@@ -239,7 +239,7 @@ impl Scanner {
     pub fn scan_tokens(&mut self) -> Result<Vec<Token>, ScanningErrorSummary> {
         let mut tokens: Vec<Token> = Vec::new();
         let mut errors: Vec<ScanningError> = Vec::new();
-        let mut caret = Caret::new(&self.source);
+        let mut caret = Consumer::new(&self.source);
 
         while !caret.is_at_end_of_input() {
             caret.start_car = caret.current_char;
