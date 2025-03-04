@@ -26,14 +26,6 @@ impl InterpreterError {
     }
 }
 
-/*
-impl fmt::Display for InterpreterError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        //write!(f, "{}", self.details)
-    }
-}
-*/
-
 impl From<ValidationError> for InterpreterError {
     fn from(value: ValidationError) -> Self {
         InterpreterError::new(value.get_output(), value.get_error_details(), value.get_exit_code())

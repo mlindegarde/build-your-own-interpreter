@@ -61,7 +61,7 @@ impl Evaluator {
 
     fn grouping(&self, expression: &Expression) -> Result<String, EvaluationError> {
         match expression {
-            Expression::Grouping { expression } => self.evaluate_expression(expression),
+            Expression::Grouping { expression: inner_expression } => self.evaluate_expression(inner_expression),
             _ => Err(EvaluationError::InvalidExpression)
         }
     }
