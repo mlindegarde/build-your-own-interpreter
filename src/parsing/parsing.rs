@@ -2,18 +2,13 @@ use crate::lexing::scanning::Scanner;
 use crate::lexing::tokenizing::{Token, TokenData, TokenType};
 use exitcode::ExitCode;
 use std::{fmt, fs};
-use std::error::Error;
+use crate::util::error_handling::{ExitCodeProvider, InterpreterError};
 
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub enum ParsingError {
     ExpectedExpression,
     UnexpectedToken
-}
-
-#[derive(Debug)]
-pub struct ParsingErrorDetails {
-    
 }
 
 impl fmt::Display for ParsingError {
@@ -25,9 +20,12 @@ impl fmt::Display for ParsingError {
     }
 }
 
-impl Error for ParsingError {
-    fn description(&self) -> &str {
-        "desc"
+impl ExitCodeProvider for ParsingError {
+    fn get_exit_code(&self) -> ExitCode {
+        match self {
+            ParsingError::ExpectedExpression => ExitCode::from(65),
+            ParsingError::UnexpectedToken => ExitCode::from(65)
+        }
     }
 }
 
@@ -314,7 +312,7 @@ fn handle_parse_results(expression: &Expression) -> ExitCode {
     exitcode::OK
 }
 
-pub fn build_abstract_syntax_tree(filename: &str) -> Result<ExitCode, Box<dyn Error>> {
+pub fn build_abstract_syntax_tree(filename: &str) -> Result<ExitCode, InterpreterError> {
     let file_contents = fs::read_to_string(filename).unwrap_or_else(|_| {
         eprintln!("Failed to read file {}:  Defaulting to an empty string", filename);
         String::new()

@@ -7,10 +7,10 @@ use exitcode::ExitCode;
 use std::fs;
 use std::str::FromStr;
 use std::{env, fmt};
-use std::error::Error;
-use std::process::exit;
+use std::process::{exit};
 use crate::lexing::tokenizing::tokenize_file;
 use crate::parsing::parsing::build_abstract_syntax_tree;
+use crate::util::error_handling::{ExitCodeProvider, InterpreterError};
 //** VALIDATION ERRORS *************************************************************************************************
 
 #[derive(Debug)]
@@ -35,7 +35,14 @@ impl fmt::Display for ValidationError {
     }
 }
 
-impl Error for ValidationError {
+impl ExitCodeProvider for ValidationError {
+    fn get_exit_code(&self) -> ExitCode {
+        match self {
+            ValidationError::ArgumentCount { .. } => exitcode::USAGE,
+            ValidationError::Command { .. } => exitcode::USAGE,
+            ValidationError::Filename { .. } => exitcode::IOERR
+        }
+    }
 }
 
 //** COMMANDS **********************************************************************************************************
@@ -85,24 +92,14 @@ fn validate_input(args: &[String]) -> Result<(Command,&String), ValidationError>
 
 //** EXECUTION LOGIC ***************************************************************************************************
 
-fn execute_command(command: &Command, filename: &str) -> Result<ExitCode, Box<dyn Error>> {
+fn execute_command(command: &Command, filename: &str) -> Result<ExitCode, InterpreterError> {
     match command {
         Command::Tokenize => tokenize_file(filename),
         Command::Parse => build_abstract_syntax_tree(filename)
     }
 }
 
-fn handle_error(error: ValidationError) -> ExitCode {
-    eprintln!("{}", error);
-
-    match error {
-        ValidationError::ArgumentCount { .. } => exitcode::USAGE,
-        ValidationError::Command { .. } => exitcode::USAGE,
-        ValidationError::Filename { .. } => exitcode::IOERR
-    }
-}
-
-fn run() -> Result<i32, Box<dyn Error>> {
+fn run() -> Result<i32, InterpreterError> {
     let args: Vec<String> = env::args().collect();
     let (command, filename) = validate_input(&args)?;
     let exit_code = execute_command(&command, filename)?;
@@ -113,6 +110,6 @@ fn run() -> Result<i32, Box<dyn Error>> {
 fn main() {
     exit(run().unwrap_or_else(|error| {
         eprintln!("{}", error);
-        exitcode::USAGE
+        error.exit_code
     }))
 }

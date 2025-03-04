@@ -1,7 +1,7 @@
 use std::{fmt, fs};
-use std::error::Error;
 use exitcode::ExitCode;
 use crate::lexing::scanning::{Scanner};
+use crate::util::error_handling::InterpreterError;
 use crate::util::string_util;
 
 //** TOKEN TYPES *******************************************************************************************************
@@ -160,7 +160,7 @@ fn handle_tokenize_results(results: Result<Vec<Token>, ScanningErrorDetails>) ->
 }
 */
 
-pub fn tokenize_file(filename: &str) -> Result<ExitCode, Box<dyn Error>>{
+pub fn tokenize_file(filename: &str) -> Result<ExitCode, InterpreterError>{
     let file_contents = fs::read_to_string(filename).unwrap_or_else(|_| {
         eprintln!("Failed to read file {}:  Defaulting to an empty string", filename);
         String::new()

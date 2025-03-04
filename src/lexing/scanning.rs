@@ -1,10 +1,9 @@
 use std::collections::HashMap;
-use std::error::Error;
 use std::fmt;
 use std::fmt::{Debug};
 use crate::lexing::caret::{Caret};
 use crate::lexing::tokenizing::{TokenData, Token, TokenType};
-
+use crate::util::error_handling::ExitCodeProvider;
 //** SCANNING ERRORS. **************************************************************************************************
 
 #[allow(dead_code)]
@@ -58,9 +57,9 @@ impl fmt::Display for ScanningErrorDetails {
     }
 }
 
-impl Error for ScanningErrorDetails {
-    fn description(&self) -> &str {
-        "desc"
+impl ExitCodeProvider for ScanningErrorDetails {
+    fn get_exit_code(&self) -> i32 {
+        exitcode::DATAERR
     }
 }
 
