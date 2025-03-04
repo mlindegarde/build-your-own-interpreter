@@ -46,15 +46,29 @@ impl<'a> ScanningErrorSummary {
 
 impl fmt::Display for ScanningErrorSummary {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        /*
         let mut details = String::new();
+
+        for token_info in &self.tokens {
+            details.push_str(&format!("{}\n", token_info));
+        }
 
         for error in &self.errors {
             details.push_str(&format!("{}\n", error));
         }
 
-        for token_info in &self.tokens {
-            details.push_str(&format!("{}\n", token_info));
-        }
+        write!(f, "{}", details)
+
+         */
+
+        let details: String = self.tokens
+            .iter()
+            .map(|token| format!("{}\n", token))
+            .chain(
+                self.errors.iter()
+                    .map(|error| format!("{}\n", error))
+            )
+            .collect();
 
         write!(f, "{}", details)
     }
