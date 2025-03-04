@@ -46,17 +46,17 @@ impl<'a> ScanningErrorSummary {
 
 impl fmt::Display for ScanningErrorSummary {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let mut details = String::new();
+        let mut details = Vec::new();
 
         for token_info in &self.tokens {
-            details.push_str(&format!("{}\n", token_info));
+            details.push(format!("{}", token_info));
         }
 
         for error in &self.errors {
-            details.push_str(&format!("{}\n", error));
+            details.push(format!("{}", error));
         }
 
-        write!(f, "{}", details)
+        write!(f, "{}", details.join("\n"))
 
         /*
         let details: String = self.tokens
