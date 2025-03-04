@@ -1,5 +1,4 @@
 use std::fs;
-use exitcode::ExitCode;
 use crate::lexing::scanner::Scanner;
 use crate::parsing::parser::Parser;
 use crate::util::error_handling::InterpreterError;
@@ -9,7 +8,7 @@ pub mod tests;
 pub mod consumer;
 pub mod expression;
 
-pub fn build_abstract_syntax_tree(filename: &str) -> Result<ExitCode, InterpreterError> {
+pub fn build_abstract_syntax_tree(filename: &str) -> Result<String, InterpreterError> {
     let file_contents = fs::read_to_string(filename).unwrap_or_else(|_| {
         eprintln!("Failed to read file {}:  Defaulting to an empty string", filename);
         String::new()
@@ -21,6 +20,5 @@ pub fn build_abstract_syntax_tree(filename: &str) -> Result<ExitCode, Interprete
     let parser = Parser::new(tokens);
     let ast = parser.parse()?;
 
-    println!("{}", ast);
-    Ok(exitcode::OK)
+    Ok(format!("{}", ast))
 }

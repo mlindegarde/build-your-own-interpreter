@@ -1,12 +1,11 @@
 use std::fs;
-use exitcode::ExitCode;
 use crate::lexing::scanner::Scanner;
 use crate::parsing::parser::Parser;
 use crate::util::error_handling::InterpreterError;
 
 pub mod evaluator;
 
-pub fn evaluate_ast(filename: &str) -> Result<ExitCode, InterpreterError> {
+pub fn evaluate_ast(filename: &str) -> Result<String, InterpreterError> {
     let file_contents = fs::read_to_string(filename).unwrap_or_else(|_| {
         eprintln!("Failed to read file {}:  Defaulting to an empty string", filename);
         String::new()
@@ -21,6 +20,5 @@ pub fn evaluate_ast(filename: &str) -> Result<ExitCode, InterpreterError> {
     let evaluator = evaluator::Evaluator::new(ast);
     let result = evaluator.evaluate()?;
 
-    println!("{}", result);
-    Ok(exitcode::OK)
+    Ok(format!("{}", result))
 }

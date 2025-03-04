@@ -1,5 +1,4 @@
 use std::fs;
-use exitcode::ExitCode;
 use crate::lexing::scanner::Scanner;
 use crate::util::error_handling::InterpreterError;
 
@@ -9,7 +8,7 @@ pub mod scanner;
 
 mod tests;
 
-pub fn tokenize_file(filename: &str) -> Result<ExitCode, InterpreterError>{
+pub fn tokenize_file(filename: &str) -> Result<String, InterpreterError>{
     let file_contents = fs::read_to_string(filename).unwrap_or_else(|_| {
         eprintln!("Failed to read file {}:  Defaulting to an empty string", filename);
         String::new()
@@ -18,9 +17,11 @@ pub fn tokenize_file(filename: &str) -> Result<ExitCode, InterpreterError>{
     let mut scanner = Scanner::new(file_contents.clone());
     let tokens = scanner.scan_tokens()?;
 
+    let mut output = Vec::new();
+
     for token_info in tokens {
-        println!("{}", token_info);
+        output.push(format!("{}", token_info));
     }
 
-    Ok(exitcode::OK)
+    Ok(output.join("\n"))
 }
