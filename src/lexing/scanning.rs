@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::error::Error;
 use std::fmt;
-use std::fmt::{Debug, Formatter};
+use std::fmt::{Debug};
 use crate::lexing::caret::{Caret};
 use crate::lexing::tokenizing::{TokenData, Token, TokenType};
 
@@ -28,13 +28,13 @@ impl fmt::Display for ScanningError {
 }
 
 #[derive(Debug)]
-pub struct ScanningErrorDetails<'a> {
-    pub tokens: Vec<Token<'a>>,
+pub struct ScanningErrorDetails {
+    pub tokens: Vec<Token>,
     pub errors: Vec<ScanningError>
 }
 
-impl<'a> ScanningErrorDetails<'a> {
-    pub fn new(tokens: Vec<Token<'a>>, errors: Vec<ScanningError>) -> Self {
+impl<'a> ScanningErrorDetails {
+    pub fn new(tokens: Vec<Token>, errors: Vec<ScanningError>) -> Self {
         ScanningErrorDetails {
             tokens,
             errors
@@ -42,7 +42,7 @@ impl<'a> ScanningErrorDetails<'a> {
     }
 }
 
-impl fmt::Display for ScanningErrorDetails<'_> {
+impl fmt::Display for ScanningErrorDetails {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut details = String::new();
 
@@ -58,9 +58,8 @@ impl fmt::Display for ScanningErrorDetails<'_> {
     }
 }
 
-impl Error for ScanningErrorDetails<'_> {
+impl Error for ScanningErrorDetails {
     fn description(&self) -> &str {
-        let x = self.to_string();
         "desc"
     }
 }
@@ -115,12 +114,12 @@ impl Scanner {
         &self.source[start .. end]
     }
 
-    fn build_token<'a>(&self, token_type: TokenType, token_data: TokenData<'a>, caret: &Caret) -> Token<'a> {
+    fn build_token(&self, token_type: TokenType, token_data: TokenData, caret: &Caret) -> Token {
         Token::new(caret.current_line, token_type, token_data)
     }
 
     fn build_terminal_token(&self, caret: &Caret) -> Token {
-        self.build_token(TokenType::Eof, TokenData::Terminal, caret)
+        self.build_token(TokenType::Eof, TokenData::new_terminal(), caret)
     }
 
     fn build_comment_token(&self, caret: &mut Caret) -> Token {
@@ -134,7 +133,7 @@ impl Scanner {
     fn build_reserved_token(&self, token_type: TokenType, caret: &Caret) -> Token {
         self.build_token(
             token_type,
-            TokenData::Reserved { lexeme: self.get_current_lexeme(Trim::None, caret) },
+            TokenData::new_reserved(self.get_current_lexeme(Trim::None, caret)),
             caret)
     }
 
@@ -165,10 +164,10 @@ impl Scanner {
         caret.advance();
         Ok(self.build_token(
             TokenType::String,
-            TokenData::StringLiteral {
-                lexeme: self.get_current_lexeme(Trim::None, caret),
-                literal: self.get_current_lexeme(Trim::Both, caret)
-            },
+            TokenData::new_string_literal(
+                self.get_current_lexeme(Trim::None, caret),
+                self.get_current_lexeme(Trim::Both, caret)
+            ),
             caret))
     }
 
@@ -186,7 +185,8 @@ impl Scanner {
 
         self.build_token(
             TokenType::Number,
-            TokenData::NumericLiteral { lexeme, literal },
+            //TokenData::NumericLiteral { lexeme, literal },
+            TokenData::new_numeric_literal(lexeme, literal),
             caret)
     }
 

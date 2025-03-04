@@ -32,12 +32,34 @@ impl Error for ParsingError {
 }
 
 #[derive(Debug, Clone)]
-pub enum Expression<'a> {
-    Binary { left: Box<Expression<'a>>, operator: &'a Token<'a>, right: Box<Expression<'a>> },
-    Unary { operator: &'a Token<'a>, right: Box<Expression<'a>> },
-    StringLiteral { value: &'a str },
+pub enum Expression {
+    Binary { left: Box<Expression>, operator: Token, right: Box<Expression> },
+    Unary { operator: Token, right: Box<Expression> },
+    StringLiteral { value: String },
     NumericLiteral { value: f64 },
-    Grouping { expression: Box<Expression<'a>> }
+    Grouping { expression: Box<Expression> }
+}
+
+impl Expression {
+    pub(crate) fn new_binary(left: Expression, operator: Token, right: Expression) -> Self {
+        Expression::Binary { left: Box::from(left), operator, right: Box::from(right) }
+    }
+
+    pub(crate) fn new_unary(operator: Token, right: Expression) -> Self {
+        Expression::Unary { operator, right: Box::from(right) }
+    }
+
+    pub(crate) fn new_string_literal(value: &str) -> Self {
+        Expression::StringLiteral { value: String::from(value) }
+    }
+
+    pub(crate) fn new_numeric_literal(value: f64) -> Self {
+        Expression::NumericLiteral { value }
+    }
+
+    pub(crate) fn new_grouping(expression: Expression) -> Self {
+        Expression::Grouping { expression: Box::from(expression) }
+    }
 }
 
 fn parenthesize(name: &str, expressions: Vec<&Expression>) -> String {
@@ -55,7 +77,7 @@ fn parenthesize(name: &str, expressions: Vec<&Expression>) -> String {
     output
 }
 
-impl fmt::Display for Expression<'_> {
+impl fmt::Display for Expression {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Expression::Binary { left, operator, right } => {
@@ -74,15 +96,15 @@ impl fmt::Display for Expression<'_> {
 }
 
 
-struct Cursor<'a> {
-    tokens: &'a Vec<Token<'a>>,
+struct Cursor {
+    tokens: Vec<Token>,
     pub current_index: u16
 }
 
-impl<'a> Cursor<'a> {
-    pub fn new(tokens: &'a Vec<Token<'a>>) -> Self {
+impl<'a> Cursor {
+    pub fn new(tokens: &Vec<Token>) -> Self {
         Cursor {
-            tokens,
+            tokens: tokens.to_vec(),
             current_index: 0
         }
     }
@@ -140,7 +162,7 @@ impl<'a> Cursor<'a> {
     }
 
     fn report(&self, line_number: u16, desc: &str, message: &str) {
-        //println!("[line {}] Desc: {}, Error: {}", line_number, desc, message);
+        println!("[line {}] Desc: {}, Error: {}", line_number, desc, message);
     }
 
     /*
@@ -168,28 +190,29 @@ impl<'a> Cursor<'a> {
     */
 }
 
-pub struct Parser<'a> {
-    pub tokens: &'a Vec<Token<'a>>
+pub struct Parser {
+    pub tokens: Vec<Token>
 }
 
-impl<'a> Parser<'a> {
-    pub fn new(tokens: &'a Vec<Token<'a>>) -> Self {
+impl Parser {
+    pub fn new(tokens: Vec<Token>) -> Self {
         Parser {
             tokens
         }
     }
 
     fn primary(&self, cursor: &mut Cursor) -> Result<Expression, ParsingError> {
-        if cursor.match_token_type(vec![TokenType::False]) { return Ok(Expression::StringLiteral { value: "false" }) };
-        if cursor.match_token_type(vec![TokenType::True]) { return Ok(Expression::StringLiteral { value: "true" }) };
-        if cursor.match_token_type(vec![TokenType::Nil]) { return Ok(Expression::StringLiteral { value: "nil" }) };
+        if cursor.match_token_type(vec![TokenType::False]) { return Ok(Expression::new_string_literal("false")) };
+        if cursor.match_token_type(vec![TokenType::True]) { return Ok(Expression::new_string_literal("true")) };
+        if cursor.match_token_type(vec![TokenType::Nil]) { return Ok(Expression::new_string_literal("nil")) };
 
         if cursor.match_token_type(vec![TokenType::Number, TokenType::String]) {
             let previous_token = &self.tokens[(cursor.current_index-1) as usize];
 
-            return match previous_token.token_data {
-                TokenData::StringLiteral { lexeme: _, literal } => Ok(Expression::StringLiteral { value: literal }),
-                TokenData::NumericLiteral { lexeme: _, literal } => Ok(Expression::NumericLiteral { value: literal }),
+            return match &previous_token.token_data {
+                //TokenData::StringLiteral { lexeme: _, literal } => Ok(Expression::StringLiteral { value: literal.clone() }),
+                TokenData::StringLiteral { lexeme: _, literal } => Ok(Expression::new_string_literal(literal)),
+                TokenData::NumericLiteral { lexeme: _, literal } => Ok(Expression::new_numeric_literal(literal.clone())),
                 _ => panic!("adf")
             };
         }
@@ -199,7 +222,7 @@ impl<'a> Parser<'a> {
 
             return match cursor.consume(TokenType::RightParen, "Expect ')' after expression.") {
                 Ok(_) => {
-                    Ok(Expression::Grouping {  expression: Box::from(expression) })
+                    Ok(Expression::new_grouping(expression))
                 },
                 Err(_) => {
                     //cursor.error(cursor.peek(), "Expect ')' after expression.");
@@ -217,10 +240,7 @@ impl<'a> Parser<'a> {
             let operator = &self.tokens[(cursor.current_index-1) as usize];
             let right = self.unary(cursor)?;
 
-            return Ok(Expression::Unary {
-                operator,
-                right: Box::from(right)
-            });
+            return Ok(Expression::new_unary(operator.clone(), right));
         }
 
         self.primary(cursor)
@@ -232,11 +252,7 @@ impl<'a> Parser<'a> {
         while cursor.match_token_type(vec![TokenType::Slash, TokenType::Star]) {
             let operator = &self.tokens[(cursor.current_index-1) as usize];
             let right = self.unary(cursor)?;
-            expression = Expression::Binary {
-                left: Box::from(expression),
-                operator,
-                right: Box::from(right)
-            }
+            expression = Expression::new_binary(expression, operator.clone(), right)
         }
 
         Ok(expression)
@@ -249,11 +265,7 @@ impl<'a> Parser<'a> {
         while cursor.match_token_type(vec![TokenType::Minus, TokenType::Plus]) {
             let operator = &self.tokens[(cursor.current_index-1) as usize];
             let right = self.factor(cursor)?;
-            expression = Expression::Binary {
-                left: Box::from(expression),
-                operator,
-                right: Box::from(right)
-            }
+            expression = Expression::new_binary(expression, operator.clone(), right)
         }
 
         Ok(expression)
@@ -266,12 +278,7 @@ impl<'a> Parser<'a> {
         while cursor.match_token_type(vec![TokenType::Greater, TokenType::GreaterEqual, TokenType::Less, TokenType::LessEqual]) {
             let operator = &self.tokens[(cursor.current_index-1) as usize];
             let right = self.term(cursor)?;
-            //let right = Expression::Literal { value: "" };
-            expression = Expression::Binary {
-                left: Box::from(expression),
-                operator,
-                right: Box::from(right)
-            }
+            expression = Expression::new_binary(expression, operator.clone(), right)
         }
 
         Ok(expression)
@@ -285,11 +292,7 @@ impl<'a> Parser<'a> {
             let operator = &self.tokens[(cursor.current_index-1) as usize];
             let right = self.comparison(cursor)?;
 
-            expression = Expression::Binary {
-                left: Box::from(expression),
-                operator,
-                right: Box::from(right)
-            }
+            expression = Expression::new_binary(expression, operator.clone(), right)
         }
 
         Ok(expression)
@@ -317,13 +320,12 @@ pub fn build_abstract_syntax_tree(filename: &str) -> Result<ExitCode, Box<dyn Er
         String::new()
     });
 
-    /*
-    let mut scanner = Scanner::new(file_contents.clone());
+    let mut scanner = Scanner::new(file_contents);
     let tokens = scanner.scan_tokens()?;
 
-    let parser = Parser::new(&tokens);
+    let parser = Parser::new(tokens);
     let ast = parser.parse()?;
+
     handle_parse_results(&ast);
-    */
     Ok(exitcode::OK)
 }

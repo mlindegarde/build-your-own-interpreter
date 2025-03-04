@@ -8,10 +8,12 @@ use std::fs;
 use std::str::FromStr;
 use std::{env, fmt};
 use std::error::Error;
+use std::process::exit;
 use crate::lexing::tokenizing::tokenize_file;
 use crate::parsing::parsing::build_abstract_syntax_tree;
 //** VALIDATION ERRORS *************************************************************************************************
 
+#[derive(Debug)]
 enum ValidationError {
     ArgumentCount { expected: usize, actual: usize },
     Command { provided_command: String },
@@ -31,6 +33,9 @@ impl fmt::Display for ValidationError {
                 write!(f, "Invalid filename: {}", provided_filename)
         }
     }
+}
+
+impl Error for ValidationError {
 }
 
 //** COMMANDS **********************************************************************************************************
@@ -97,17 +102,17 @@ fn handle_error(error: ValidationError) -> ExitCode {
     }
 }
 
+fn run() -> Result<i32, Box<dyn Error>> {
+    let args: Vec<String> = env::args().collect();
+    let (command, filename) = validate_input(&args)?;
+    let exit_code = execute_command(&command, filename)?;
+
+    Ok(exit_code)
+}
+
 fn main() {
-    std::process::exit(
-        match validate_input(&env::args().collect::<Vec<String>>()) {
-            Ok((command, filename)) =>
-                match execute_command(&command, filename) {
-                    Ok(exit_code) => exit_code,
-                    Err(error) => {
-                        eprintln!("{}", error);
-                        exitcode::USAGE
-                    }
-                },
-            Err(error) => handle_error(error)
-        });
+    exit(run().unwrap_or_else(|error| {
+        eprintln!("{}", error);
+        exitcode::USAGE
+    }))
 }

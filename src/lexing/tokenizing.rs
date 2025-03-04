@@ -1,7 +1,7 @@
 use std::{fmt, fs};
 use std::error::Error;
 use exitcode::ExitCode;
-use crate::lexing::scanning::{ScanningError, Scanner, ScanningErrorDetails};
+use crate::lexing::scanning::{Scanner};
 use crate::util::string_util;
 
 //** TOKEN TYPES *******************************************************************************************************
@@ -61,25 +61,43 @@ impl Eq for TokenType {}
 //** TOKEN DATA ENUM **************************************************************************************************
 
 #[derive(Debug, Clone)]
-pub enum TokenData<'a> {
-    Reserved { lexeme: &'a str },
-    StringLiteral { lexeme: &'a str, literal: &'a str },
-    NumericLiteral { lexeme: &'a str, literal: f64 },
+pub enum TokenData {
+    Reserved { lexeme: String },
+    StringLiteral { lexeme: String, literal: String },
+    NumericLiteral { lexeme: String, literal: f64 },
     Terminal, Comment
+}
+
+impl TokenData {
+    pub fn new_reserved(lexeme: &str) -> Self {
+        TokenData::Reserved { lexeme: String::from(lexeme) }
+    }
+
+    pub fn new_string_literal(lexeme: &str, literal: &str) -> Self {
+        TokenData::StringLiteral { lexeme: String::from(lexeme), literal: String::from(literal) }
+    }
+
+    pub fn new_numeric_literal(lexeme: &str, literal: f64) -> Self {
+        TokenData::NumericLiteral { lexeme: String::from(lexeme), literal }
+    }
+
+    pub fn new_terminal() -> Self {
+        TokenData::Terminal
+    }
 }
 
 //** TOKEN AND TOKEN IMPLEMENTATION ************************************************************************************
 
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
-pub struct Token<'a> {
+pub struct Token {
     pub line: u16,
     pub token_type: TokenType,
-    pub token_data: TokenData<'a>
+    pub token_data: TokenData
 }
 
-impl<'a> Token<'a> {
-    pub fn new(line: u16, token_type: TokenType, token: TokenData<'a>) -> Self {
+impl Token {
+    pub fn new(line: u16, token_type: TokenType, token: TokenData) -> Self {
         Token {
             line,
             token_type,
@@ -88,19 +106,19 @@ impl<'a> Token<'a> {
     }
 
     pub fn get_name(&self) -> String {
-        match self.token_data {
+        match &self.token_data {
             TokenData::Reserved { lexeme } |
             TokenData::StringLiteral { lexeme, literal: _ } |
-            TokenData::NumericLiteral { lexeme, literal: _} => String::from(lexeme),
+            TokenData::NumericLiteral { lexeme, literal: _} => lexeme.to_string(),
             TokenData::Terminal |
             TokenData::Comment => String::new()
         }
     }
 }
 
-impl fmt::Display for Token<'_> {
+impl fmt::Display for Token {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self.token_data {
+        match &self.token_data {
             TokenData::Reserved { lexeme } => write!(f, "{} {} null", self.token_type, lexeme),
             TokenData::StringLiteral { lexeme, literal } => write!(f, "{} {} {}", self.token_type, lexeme, literal),
             TokenData::NumericLiteral { lexeme, literal } => write!(f, "{} {} {:?}", self.token_type, lexeme, literal),
@@ -117,11 +135,14 @@ pub fn display_tokens(tokens: &[Token]) {
     }
 }
 
+/*
 pub fn display_errors(errors: &[ScanningError]) {
     for error in errors {
         eprintln!("{}", error);
     }
 }
+
+ */
 
 /*
 fn handle_tokenize_results(results: Result<Vec<Token>, ScanningErrorDetails>) -> ExitCode {
@@ -162,6 +183,7 @@ pub fn tokenize_file(filename: &str) -> Result<ExitCode, Box<dyn Error>>{
         }
     }
     */
-    //display_tokens(&tokens.clone());
+
+    display_tokens(&tokens.clone());
     Ok(exitcode::OK)
 }

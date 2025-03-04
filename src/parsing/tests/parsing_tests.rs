@@ -4,17 +4,17 @@ use crate::parsing::parsing::{Expression, Parser};
 
 #[test]
 fn should_generate_expected_output() {
-    let minus_token = Token::new(1, TokenType::Minus, TokenData::Reserved { lexeme: "-" });
-    let star_token = Token::new(1, TokenType::Star, TokenData::Reserved { lexeme: "*" });
+    let minus_token = Token::new(1, TokenType::Minus, TokenData::new_reserved("-"));
+    let star_token = Token::new(1, TokenType::Star, TokenData::new_reserved("*"));
 
     let expression = Expression::Binary {
         left: Box::from(Expression::Unary {
-            operator: &minus_token,
-            right: Box::from(Expression::StringLiteral { value: "123" })
+            operator: minus_token,
+            right: Box::from(Expression::new_string_literal("123"))
         }),
-        operator: &star_token,
+        operator: star_token,
         right: Box::from(Expression::Grouping {
-            expression: Box::from(Expression::StringLiteral { value: "45.67" })
+            expression: Box::from(Expression::new_string_literal("45.67"))
         })
     };
 
@@ -36,9 +36,9 @@ fn should_generate_the_correct_ast_for_numeric_comparison() {
     let expected_output = "(< 1.0 3.0)";
 
     let mut scanner = Scanner::new(String::from(input));
-    let tokens = &scanner.scan_tokens().unwrap();
+    let tokens = scanner.scan_tokens().unwrap();
 
-    let parser = Parser::new(&tokens);
+    let parser = Parser::new(tokens);
     let ast = &parser.parse().unwrap();
 
     let ast_as_string = format!("{}", ast);
@@ -52,9 +52,9 @@ fn should_generate_the_correct_ast_for_string_comparison() {
     let expected_output = "(< a b)";
 
     let mut scanner = Scanner::new(String::from(input));
-    let tokens = &scanner.scan_tokens().unwrap();
+    let tokens = scanner.scan_tokens().unwrap();
 
-    let parser = Parser::new(&tokens);
+    let parser = Parser::new(tokens);
     let ast = &parser.parse().unwrap();
 
     let ast_as_string = format!("{}", ast);
@@ -68,9 +68,9 @@ fn should_generate_the_correct_ast_given_simple_bang_equals() {
     let expected_output = "(!= bar baz)";
 
     let mut scanner = Scanner::new(String::from(input));
-    let tokens = &scanner.scan_tokens().unwrap();
+    let tokens = scanner.scan_tokens().unwrap();
 
-    let parser = Parser::new(&tokens);
+    let parser = Parser::new(tokens);
     let ast = &parser.parse().unwrap();
 
     let ast_as_string = format!("{}", ast);
@@ -83,9 +83,9 @@ fn should_handle_parsing_error() {
     let input = "if (bat == frog";
 
     let mut scanner = Scanner::new(String::from(input));
-    let tokens = &scanner.scan_tokens().unwrap();
+    let tokens = scanner.scan_tokens().unwrap();
 
-    let parser = Parser::new(&tokens);
+    let parser = Parser::new(tokens);
     let result = &parser.parse();
 
     assert_eq!(result.is_err(), true);
