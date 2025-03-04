@@ -102,7 +102,7 @@ fn validate_input(args: &[String]) -> Result<(Command, &String), ValidationError
 fn execute_command(command: Command, filename: &str) -> Result<ExitCode, InterpreterError> {
     match command {
         Command::Tokenize => tokenize_file(filename).inspect_err(|error| eprintln!("{}", error)),
-        Command::Parse => build_abstract_syntax_tree(filename).inspect_err(|error| println!("{}", error)),
+        Command::Parse => build_abstract_syntax_tree(filename).inspect_err(|error| eprintln!("{}", error)),
         Command::Evaluate => evaluate_ast(filename)
     }
 }
