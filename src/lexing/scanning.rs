@@ -1,6 +1,7 @@
 use std::collections::HashMap;
+use std::error::Error;
 use std::fmt;
-
+use std::fmt::{Debug, Formatter};
 use crate::lexing::caret::{Caret};
 use crate::lexing::tokenizing::{TokenData, Token, TokenType};
 
@@ -23,6 +24,44 @@ impl fmt::Display for ScanningError {
                 write!(f, "[line {}] Error: Unterminated string.", line)
             }
         }
+    }
+}
+
+#[derive(Debug)]
+pub struct ScanningErrorDetails<'a> {
+    pub tokens: Vec<Token<'a>>,
+    pub errors: Vec<ScanningError>
+}
+
+impl<'a> ScanningErrorDetails<'a> {
+    pub fn new(tokens: Vec<Token<'a>>, errors: Vec<ScanningError>) -> Self {
+        ScanningErrorDetails {
+            tokens,
+            errors
+        }
+    }
+}
+
+impl fmt::Display for ScanningErrorDetails<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut details = String::new();
+
+        for error in &self.errors {
+            details.push_str(&format!("{}\n", error));
+        }
+
+        for token_info in &self.tokens {
+            details.push_str(&format!("{}\n", token_info));
+        }
+
+        write!(f, "{}", details)
+    }
+}
+
+impl Error for ScanningErrorDetails<'_> {
+    fn description(&self) -> &str {
+        let x = self.to_string();
+        "desc"
     }
 }
 
@@ -195,7 +234,7 @@ impl Scanner {
         }
     }
 
-    pub fn scan_tokens(&mut self) -> Result<Vec<Token>, (Vec<Token>, Vec<ScanningError>)> {
+    pub fn scan_tokens(&mut self) -> Result<Vec<Token>, ScanningErrorDetails> {
         let mut tokens: Vec<Token> = Vec::new();
         let mut errors: Vec<ScanningError> = Vec::new();
         let mut caret = Caret::new(&self.source);
@@ -216,6 +255,6 @@ impl Scanner {
         tokens.push(self.build_terminal_token(&caret));
 
         if errors.is_empty() { Ok(tokens) }
-        else { Err((tokens, errors)) }
+        else { Err(ScanningErrorDetails::new(tokens, errors)) }
     }
 }

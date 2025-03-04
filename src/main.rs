@@ -7,7 +7,7 @@ use exitcode::ExitCode;
 use std::fs;
 use std::str::FromStr;
 use std::{env, fmt};
-
+use std::error::Error;
 use crate::lexing::tokenizing::tokenize_file;
 use crate::parsing::parsing::build_abstract_syntax_tree;
 //** VALIDATION ERRORS *************************************************************************************************
@@ -80,7 +80,7 @@ fn validate_input(args: &[String]) -> Result<(Command,&String), ValidationError>
 
 //** EXECUTION LOGIC ***************************************************************************************************
 
-fn execute_command(command: &Command, filename: &str) -> ExitCode {
+fn execute_command(command: &Command, filename: &str) -> Result<ExitCode, Box<dyn Error>> {
     match command {
         Command::Tokenize => tokenize_file(filename),
         Command::Parse => build_abstract_syntax_tree(filename)
@@ -100,7 +100,14 @@ fn handle_error(error: ValidationError) -> ExitCode {
 fn main() {
     std::process::exit(
         match validate_input(&env::args().collect::<Vec<String>>()) {
-            Ok((command, filename)) => execute_command(&command, filename),
+            Ok((command, filename)) =>
+                match execute_command(&command, filename) {
+                    Ok(exit_code) => exit_code,
+                    Err(error) => {
+                        eprintln!("{}", error);
+                        exitcode::USAGE
+                    }
+                },
             Err(error) => handle_error(error)
         });
 }

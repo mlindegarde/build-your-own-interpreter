@@ -2,12 +2,33 @@ use crate::lexing::scanning::Scanner;
 use crate::lexing::tokenizing::{Token, TokenData, TokenType};
 use exitcode::ExitCode;
 use std::{fmt, fs};
+use std::error::Error;
 
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub enum ParsingError {
     ExpectedExpression,
     UnexpectedToken
+}
+
+#[derive(Debug)]
+pub struct ParsingErrorDetails {
+    
+}
+
+impl fmt::Display for ParsingError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            ParsingError::ExpectedExpression => write!(f, "Expected expression."),
+            ParsingError::UnexpectedToken => write!(f, "Unexpected token.")
+        }
+    }
+}
+
+impl Error for ParsingError {
+    fn description(&self) -> &str {
+        "desc"
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -290,33 +311,19 @@ fn handle_parse_results(expression: &Expression) -> ExitCode {
     exitcode::OK
 }
 
-pub fn build_abstract_syntax_tree(filename: &str) -> ExitCode {
+pub fn build_abstract_syntax_tree(filename: &str) -> Result<ExitCode, Box<dyn Error>> {
     let file_contents = fs::read_to_string(filename).unwrap_or_else(|_| {
         eprintln!("Failed to read file {}:  Defaulting to an empty string", filename);
         String::new()
     });
 
-    let mut scanner = Scanner::new(file_contents);
-    let result = &scanner.scan_tokens();
+    /*
+    let mut scanner = Scanner::new(file_contents.clone());
+    let tokens = scanner.scan_tokens()?;
 
-    match result {
-        Ok(tokens) => {
-            let parser = Parser::new(&tokens);
-            let result = &parser.parse();
-
-            match result {
-                Ok(ast) => {
-                    handle_parse_results(&ast)
-                },
-                Err(_) => {
-                    //println!("aaah");
-                    exitcode::DATAERR
-                }
-            }
-        },
-        Err(_) => {
-            eprintln!("Failed to scan tokens");
-            exitcode::DATAERR
-        }
-    }
+    let parser = Parser::new(&tokens);
+    let ast = parser.parse()?;
+    handle_parse_results(&ast);
+    */
+    Ok(exitcode::OK)
 }

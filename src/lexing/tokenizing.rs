@@ -1,6 +1,7 @@
 use std::{fmt, fs};
+use std::error::Error;
 use exitcode::ExitCode;
-use crate::lexing::scanning::{ScanningError, Scanner};
+use crate::lexing::scanning::{ScanningError, Scanner, ScanningErrorDetails};
 use crate::util::string_util;
 
 //** TOKEN TYPES *******************************************************************************************************
@@ -122,25 +123,45 @@ pub fn display_errors(errors: &[ScanningError]) {
     }
 }
 
-fn handle_tokenize_results(results: Result<Vec<Token>, (Vec<Token>, Vec<ScanningError>)>) -> ExitCode {
+/*
+fn handle_tokenize_results(results: Result<Vec<Token>, ScanningErrorDetails>) -> ExitCode {
     match results {
         Ok(tokens) => {
             display_tokens(&tokens);
             exitcode::OK
         },
-        Err((tokens, errors)) => {
-            display_errors(&errors);
-            display_tokens(&tokens);
+        Err(errorDetails) => {
+            display_errors(&errorDetails.errors);
+            display_tokens(&errorDetails.tokens);
             exitcode::DATAERR
         }
     }
 }
+*/
 
-pub fn tokenize_file(filename: &str) -> ExitCode {
+pub fn tokenize_file(filename: &str) -> Result<ExitCode, Box<dyn Error>>{
     let file_contents = fs::read_to_string(filename).unwrap_or_else(|_| {
         eprintln!("Failed to read file {}:  Defaulting to an empty string", filename);
         String::new()
     });
 
-    handle_tokenize_results(Scanner::new(file_contents).scan_tokens())
+    let mut scanner = Scanner::new(file_contents.clone());
+
+    let tokens = scanner.scan_tokens()?;
+
+    /*
+    match scanner.scan_tokens() {
+        Ok(tokens) => {
+            display_tokens(&tokens.clone());
+            Ok(exitcode::OK)
+        },
+        Err(errorDetails) => {
+            display_errors(&errorDetails.errors);
+            display_tokens(&errorDetails.tokens);
+            Ok(exitcode::DATAERR)
+        }
+    }
+    */
+    //display_tokens(&tokens.clone());
+    Ok(exitcode::OK)
 }

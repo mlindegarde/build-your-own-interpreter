@@ -103,7 +103,7 @@ fn should_return_unterminated_string_error_when_closing_quote_is_missing() {
     let result = scanner.scan_tokens();
     assert!(result.is_err());
 
-    let errors = result.err().unwrap().1;
+    let errors = result.err().unwrap().errors;
     assert_eq!(errors.len(), 1);
 
     match &errors[0] {
