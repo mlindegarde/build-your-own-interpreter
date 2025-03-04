@@ -1,7 +1,4 @@
-use std::{fmt, fs};
-use exitcode::ExitCode;
-use crate::lexing::scanning::{Scanner};
-use crate::util::error_handling::InterpreterError;
+use std::{fmt};
 use crate::util::string_util;
 
 //** TOKEN TYPES *******************************************************************************************************
@@ -125,65 +122,4 @@ impl fmt::Display for Token {
             TokenData::Terminal | TokenData::Comment => write!(f, "{}  null", self.token_type)
         }
     }
-}
-
-//** TOKENIZING COMMAND LOGIC ******************************************************************************************
-
-pub fn display_tokens(tokens: &[Token]) {
-    for token_info in tokens {
-        println!("{}", token_info);
-    }
-}
-
-/*
-pub fn display_errors(errors: &[ScanningError]) {
-    for error in errors {
-        eprintln!("{}", error);
-    }
-}
-
- */
-
-/*
-fn handle_tokenize_results(results: Result<Vec<Token>, ScanningErrorDetails>) -> ExitCode {
-    match results {
-        Ok(tokens) => {
-            display_tokens(&tokens);
-            exitcode::OK
-        },
-        Err(errorDetails) => {
-            display_errors(&errorDetails.errors);
-            display_tokens(&errorDetails.tokens);
-            exitcode::DATAERR
-        }
-    }
-}
-*/
-
-pub fn tokenize_file(filename: &str) -> Result<ExitCode, InterpreterError>{
-    let file_contents = fs::read_to_string(filename).unwrap_or_else(|_| {
-        eprintln!("Failed to read file {}:  Defaulting to an empty string", filename);
-        String::new()
-    });
-
-    let mut scanner = Scanner::new(file_contents.clone());
-
-    let tokens = scanner.scan_tokens()?;
-
-    /*
-    match scanner.scan_tokens() {
-        Ok(tokens) => {
-            display_tokens(&tokens.clone());
-            Ok(exitcode::OK)
-        },
-        Err(errorDetails) => {
-            display_errors(&errorDetails.errors);
-            display_tokens(&errorDetails.tokens);
-            Ok(exitcode::DATAERR)
-        }
-    }
-    */
-
-    display_tokens(&tokens.clone());
-    Ok(exitcode::OK)
 }

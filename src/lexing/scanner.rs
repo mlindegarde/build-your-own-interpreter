@@ -2,9 +2,10 @@ use std::collections::HashMap;
 use std::fmt;
 use std::fmt::{Debug};
 use crate::lexing::caret::{Caret};
-use crate::lexing::tokenizing::{TokenData, Token, TokenType};
+use crate::lexing::token::{TokenData, Token, TokenType};
 use crate::util::error_handling::ExitCodeProvider;
-//** SCANNING ERRORS. **************************************************************************************************
+
+//** SCANNING ERRORS ***************************************************************************************************
 
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
@@ -26,22 +27,24 @@ impl fmt::Display for ScanningError {
     }
 }
 
+//** SCANNING ERROR SUMMARY ********************************************************************************************
+
 #[derive(Debug)]
-pub struct ScanningErrorDetails {
+pub struct ScanningErrorSummary {
     pub tokens: Vec<Token>,
     pub errors: Vec<ScanningError>
 }
 
-impl<'a> ScanningErrorDetails {
+impl<'a> ScanningErrorSummary {
     pub fn new(tokens: Vec<Token>, errors: Vec<ScanningError>) -> Self {
-        ScanningErrorDetails {
+        ScanningErrorSummary {
             tokens,
             errors
         }
     }
 }
 
-impl fmt::Display for ScanningErrorDetails {
+impl fmt::Display for ScanningErrorSummary {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut details = String::new();
 
@@ -57,7 +60,7 @@ impl fmt::Display for ScanningErrorDetails {
     }
 }
 
-impl ExitCodeProvider for ScanningErrorDetails {
+impl ExitCodeProvider for ScanningErrorSummary {
     fn get_exit_code(&self) -> i32 {
         exitcode::DATAERR
     }
@@ -233,7 +236,7 @@ impl Scanner {
         }
     }
 
-    pub fn scan_tokens(&mut self) -> Result<Vec<Token>, ScanningErrorDetails> {
+    pub fn scan_tokens(&mut self) -> Result<Vec<Token>, ScanningErrorSummary> {
         let mut tokens: Vec<Token> = Vec::new();
         let mut errors: Vec<ScanningError> = Vec::new();
         let mut caret = Caret::new(&self.source);
@@ -254,6 +257,6 @@ impl Scanner {
         tokens.push(self.build_terminal_token(&caret));
 
         if errors.is_empty() { Ok(tokens) }
-        else { Err(ScanningErrorDetails::new(tokens, errors)) }
+        else { Err(ScanningErrorSummary::new(tokens, errors)) }
     }
 }
