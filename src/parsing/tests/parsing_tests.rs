@@ -1,22 +1,20 @@
 use crate::lexing::scanning::Scanner;
 use crate::lexing::tokenizing::{Token, TokenData, TokenType};
-use crate::parsing::parsing::{Expression, Parser};
+use crate::parsing::parser::{Parser};
+use crate::parsing::expression::{Expression};
 
 #[test]
 fn should_generate_expected_output() {
     let minus_token = Token::new(1, TokenType::Minus, TokenData::new_reserved("-"));
     let star_token = Token::new(1, TokenType::Star, TokenData::new_reserved("*"));
 
-    let expression = Expression::Binary {
-        left: Box::from(Expression::Unary {
-            operator: minus_token,
-            right: Box::from(Expression::new_string_literal("123"))
-        }),
-        operator: star_token,
-        right: Box::from(Expression::Grouping {
-            expression: Box::from(Expression::new_string_literal("45.67"))
-        })
-    };
+    let expression = Expression::binary_from(
+        Expression::unary_from(
+            minus_token,
+            Expression::string_literal_from("123")),
+        star_token,
+        Expression::grouping_from(
+            Expression::string_literal_from("45.67")));
 
     let output = format!("{}", expression);
     assert_eq!(output, "(* (- 123) (group 45.67))");
@@ -24,7 +22,7 @@ fn should_generate_expected_output() {
 
 #[test]
 fn should_display_38_0() {
-    let expression = Expression::NumericLiteral { value: 38.0 };
+    let expression = Expression::numeric_literal_from(38.0);
     let output = format!("{}", expression);
 
     assert_eq!(output, "38.0");

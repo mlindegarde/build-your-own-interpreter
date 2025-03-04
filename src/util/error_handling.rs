@@ -1,7 +1,7 @@
 use std::fmt;
 use exitcode::ExitCode;
 use crate::lexing::scanning::ScanningErrorDetails;
-use crate::parsing::parsing::ParsingError;
+use crate::parsing::parser::ParsingError;
 use crate::ValidationError;
 
 pub trait ExitCodeProvider {

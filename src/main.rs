@@ -9,7 +9,7 @@ use std::str::FromStr;
 use std::{env, fmt};
 use std::process::{exit};
 use crate::lexing::tokenizing::tokenize_file;
-use crate::parsing::parsing::build_abstract_syntax_tree;
+use crate::parsing::build_abstract_syntax_tree;
 use crate::util::error_handling::{ExitCodeProvider, InterpreterError};
 //** VALIDATION ERRORS *************************************************************************************************
 
