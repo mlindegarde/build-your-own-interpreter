@@ -76,6 +76,7 @@ impl Evaluator {
         (left,right)
     }
 
+    // Should probably update these to use pattern matching as well.  This will allow better error handling
     fn divide(&self, left: &Expression, right: &Expression) -> f64 {
         let (left, right) = self.get_numeric_values(left, right);
         left / right
@@ -86,10 +87,29 @@ impl Evaluator {
         left * right
     }
 
+    fn subtract(&self, left: &Expression, right: &Expression) -> f64 {
+        let (left, right) = self.get_numeric_values(left, right);
+        left - right
+    }
+
+    fn add(&self, left: &Expression, right: &Expression) -> Result<String, EvaluationError> {
+        match (left, right) {
+            (Expression::StringLiteral { value: left }, Expression::StringLiteral { value: right }) => {
+                Ok(format!("{}{}", left, right))
+            },
+            (Expression::NumericLiteral { value: left }, Expression::NumericLiteral { value: right }) => {
+                Ok(format!("{}", left + right))
+            }
+            _ => Err(EvaluationError::InvalidExpression)
+        }
+    }
+
     fn binary(&self, left: &Expression, operator: &Token, right: &Expression) -> Result<String, EvaluationError> {
         match operator.token_type {
             TokenType::Slash => Ok(format!("{}", self.divide(left, right))),
             TokenType::Star => Ok(format!("{}", self.multiply(left, right))),
+            TokenType::Minus => Ok(format!("{}", self.subtract(left, right))),
+            TokenType::Plus => Ok(format!("{}", self.add(left, right)?)),
             _ => Err(EvaluationError::InvalidExpression)
         }
     }
