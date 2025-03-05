@@ -35,6 +35,26 @@ impl ExitCodeProvider for EvaluationError {
     }
 }
 
+//** EVALUATOR RESULT **************************************************************************************************
+
+pub enum EvaluatorResult {
+    String(String),
+    Numeric(f64),
+    Boolean(bool),
+    Nil
+}
+
+impl fmt::Display for EvaluatorResult {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            EvaluatorResult::String(value) => write!(f, "{}", value),
+            EvaluatorResult::Numeric(value) => write!(f, "{}", value),
+            EvaluatorResult::Boolean(value) => write!(f, "{}", value),
+            EvaluatorResult::Nil => write!(f, "nil")
+        }
+    }
+}
+
 //** EVALUATOR *********************************************************************************************************
 
 pub struct Evaluator {
@@ -46,76 +66,89 @@ impl Evaluator {
         Self { ast }
     }
 
-    fn string_literal(&self, value: &String) -> Result<String, EvaluationError> {
-        Ok(String::from(value))
+    fn string_literal(&self, value: &str) -> Result<EvaluatorResult, EvaluationError> {
+        match value {
+            "nil" => Ok(EvaluatorResult::Nil),
+            "true" | "false" => Ok(EvaluatorResult::Boolean(value == "true")),
+            _ => Ok(EvaluatorResult::String(value.to_string()))
+        }
     }
 
-    fn numeric_literal(&self, value: f64) -> Result<String, EvaluationError> {
-        Ok(format!("{}", value))
+    fn numeric_literal(&self, value: f64) -> Result<EvaluatorResult, EvaluationError> {
+        Ok(EvaluatorResult::Numeric(value))
     }
 
-    fn is_truthy(value: String) -> bool {
-        value != "false" && value != "0" && value != "nil"
+    fn is_truthy(result: EvaluatorResult) -> bool {
+        //value != "false" && value != "0" && value != "nil"
+
+        match result {
+            EvaluatorResult::String(value) => value != "false",
+            EvaluatorResult::Numeric(value) => value != 0.0,
+            EvaluatorResult::Boolean(value) => value,
+            EvaluatorResult::Nil => false,
+        }
     }
 
-    fn get_numeric_value(&self, right: &Expression) -> f64 {
-        self.evaluate_expression(right).unwrap().parse::<f64>().unwrap()
-    }
+    fn unary(&self,  operator: &Token, right: &Expression) -> Result<EvaluatorResult, EvaluationError> {
+        let right_result = self.evaluate_expression(right)?;
 
-    fn unary(&self,  operator: &Token, right: &Expression) -> Result<String, EvaluationError> {
-        match operator.token_type {
-            TokenType::Minus => Ok(format!("{}",  -self.get_numeric_value(&right))),
-            TokenType::Bang => Ok(format!(
-                "{}",
-                !Self::is_truthy(
-                    self.evaluate_expression(&right)?))),
+        match (operator.token_type, &right_result) {
+            (TokenType::Minus, EvaluatorResult::Numeric(value)) => Ok(EvaluatorResult::Numeric(-value)),
+            (TokenType::Bang, _) => Ok(EvaluatorResult::Boolean(!Self::is_truthy(right_result))),
             _ => Err(EvaluationError::InvalidExpression)
         }
     }
 
     fn get_numeric_values(&self, left: &Expression, right: &Expression) -> (f64, f64) {
-        let left = self.evaluate_expression(left).unwrap().parse::<f64>().unwrap();
-        let right = self.evaluate_expression(right).unwrap().parse::<f64>().unwrap();
+        let left_result = self.evaluate_expression(left).unwrap();
+        let right_result = self.evaluate_expression(right).unwrap();
 
-        (left,right)
-    }
-
-    fn divide(&self, left: &Expression, right: &Expression) -> f64 {
-        let (left, right) = self.get_numeric_values(left, right);
-        left / right
-    }
-
-    fn multiply(&self, left: &Expression, right: &Expression) -> f64 {
-        let (left, right) = self.get_numeric_values(left, right);
-        left * right
-    }
-
-    fn subtract(&self, left: &Expression, right: &Expression) -> f64 {
-        let (left, right) = self.get_numeric_values(left, right);
-        left - right
-    }
-
-    fn add(&self, left: &Expression, right: &Expression) -> Result<String, EvaluationError> {
-        let left = self.evaluate_expression(left)?;
-        let right = self.evaluate_expression(right)?;
-
-        match (left.parse::<f64>(), right.parse::<f64>()) {
-            (Ok(l), Ok(r)) => Ok(format!("{}", l + r)),
-            _ => Ok(format!("{}{}", left, right))
+        match (left_result, right_result) {
+            (EvaluatorResult::Numeric(left_value), EvaluatorResult::Numeric(right_value)) =>
+                (left_value, right_value),
+            _ => panic!("Invalid numeric values")
         }
     }
 
-    fn binary(&self, left: &Expression, operator: &Token, right: &Expression) -> Result<String, EvaluationError> {
-        match operator.token_type {
-            TokenType::Slash => Ok(format!("{}", self.divide(left, right))),
-            TokenType::Star => Ok(format!("{}", self.multiply(left, right))),
-            TokenType::Minus => Ok(format!("{}", self.subtract(left, right))),
-            TokenType::Plus => Ok(format!("{}", self.add(left, right)?)),
+    fn divide(&self, left: &Expression, right: &Expression) -> EvaluatorResult {
+        let (left, right) = self.get_numeric_values(left, right);
+        EvaluatorResult::Numeric(left / right)
+    }
+
+    fn multiply(&self, left: &Expression, right: &Expression) -> EvaluatorResult {
+        let (left, right) = self.get_numeric_values(left, right);
+        EvaluatorResult::Numeric(left * right)
+    }
+
+    fn subtract(&self, left: &Expression, right: &Expression) -> EvaluatorResult {
+        let (left, right) = self.get_numeric_values(left, right);
+        EvaluatorResult::Numeric(left - right)
+    }
+
+    fn add(&self, left: &Expression, right: &Expression) -> Result<EvaluatorResult, EvaluationError> {
+        let left = self.evaluate_expression(left)?;
+        let right = self.evaluate_expression(right)?;
+
+        match (left, right) {
+            (EvaluatorResult::Numeric(left), EvaluatorResult::Numeric(right)) =>
+                Ok(EvaluatorResult::Numeric(left + right)),
+            (EvaluatorResult::String(left), EvaluatorResult::String(right)) =>
+                Ok(EvaluatorResult::String(format!("{}{}", left, right))),
             _ => Err(EvaluationError::InvalidExpression)
         }
     }
 
-    fn evaluate_expression(&self, expression: &Expression) -> Result<String, EvaluationError> {
+    fn binary(&self, left: &Expression, operator: &Token, right: &Expression) -> Result<EvaluatorResult, EvaluationError> {
+        match operator.token_type {
+            TokenType::Slash => Ok(self.divide(left, right)),
+            TokenType::Star => Ok(self.multiply(left, right)),
+            TokenType::Minus => Ok(self.subtract(left, right)),
+            TokenType::Plus => Ok(self.add(left, right)?),
+            _ => Err(EvaluationError::InvalidExpression)
+        }
+    }
+
+    fn evaluate_expression(&self, expression: &Expression) -> Result<EvaluatorResult, EvaluationError> {
         match expression {
             Expression::StringLiteral { value } => self.string_literal(value),
             Expression::NumericLiteral { value } => self.numeric_literal(value.clone()),
@@ -127,6 +160,6 @@ impl Evaluator {
 
     pub fn evaluate(&self) -> Result<String, EvaluationError> {
         let output = self.evaluate_expression(&self.ast)?;
-        Ok(output)
+        Ok(format!("{}", output))
     }
 }
