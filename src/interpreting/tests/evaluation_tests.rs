@@ -42,6 +42,11 @@ fn should_concatenate_two_string() {
     assert_eq!(evaluate("\"Hello\" + \"World\""), "HelloWorld");
 }
 
+#[test]
+fn should_successfully_handle_complex_basic_math() {
+    assert_eq!(evaluate("63 + 59 - (-(52 - 89))"), "85");
+}
+
 fn evaluate(input: &str) -> String {
     let mut scanner = Scanner::new(String::from(input));
     let tokens = scanner.scan_tokens().unwrap();

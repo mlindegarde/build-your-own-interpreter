@@ -58,9 +58,13 @@ impl Evaluator {
         value != "false" && value != "0" && value != "nil"
     }
 
+    fn get_numeric_value(&self, right: &Expression) -> f64 {
+        self.evaluate_expression(right).unwrap().parse::<f64>().unwrap()
+    }
+
     fn unary(&self,  operator: &Token, right: &Expression) -> Result<String, EvaluationError> {
         match operator.token_type {
-            TokenType::Minus => Ok(format!("-{}",  self.evaluate_expression(&right)?)),
+            TokenType::Minus => Ok(format!("{}",  -self.get_numeric_value(&right))),
             TokenType::Bang => Ok(format!(
                 "{}",
                 !Self::is_truthy(
