@@ -81,3 +81,19 @@ fn should_successfully_negate_nil_values() {
 
     assert_eq!(output, "true");
 }
+
+#[test]
+fn should_successfully_do_basic_math() {
+    let input = "8 * 4";
+
+    let mut scanner = Scanner::new(String::from(input));
+    let tokens = scanner.scan_tokens().unwrap();
+
+    let parser = Parser::new(tokens);
+    let ast = parser.parse().unwrap();
+
+    let evaluator = Evaluator::new(ast);
+    let output = evaluator.evaluate().unwrap();
+
+    assert_eq!(output, "32");
+}

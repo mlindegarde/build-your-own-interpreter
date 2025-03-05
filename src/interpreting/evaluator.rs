@@ -54,7 +54,7 @@ impl Evaluator {
         Ok(format!("{}", value))
     }
 
-    fn is_truthy(&self, value: String) -> bool {
+    fn is_truthy(value: String) -> bool {
         value != "false" && value != "0" && value != "nil"
     }
 
@@ -63,8 +63,33 @@ impl Evaluator {
             TokenType::Minus => Ok(format!("-{}",  self.evaluate_expression(&right)?)),
             TokenType::Bang => Ok(format!(
                 "{}",
-                !self.is_truthy(
+                !Self::is_truthy(
                     self.evaluate_expression(&right)?))),
+            _ => Err(EvaluationError::InvalidExpression)
+        }
+    }
+
+    fn get_numeric_values(&self, left: &Expression, right: &Expression) -> (f64, f64) {
+        let left = self.evaluate_expression(left).unwrap().parse::<f64>().unwrap();
+        let right = self.evaluate_expression(right).unwrap().parse::<f64>().unwrap();
+
+        (left,right)
+    }
+
+    fn divide(&self, left: &Expression, right: &Expression) -> f64 {
+        let (left, right) = self.get_numeric_values(left, right);
+        left / right
+    }
+
+    fn multiply(&self, left: &Expression, right: &Expression) -> f64 {
+        let (left, right) = self.get_numeric_values(left, right);
+        left * right
+    }
+
+    fn binary(&self, left: &Expression, operator: &Token, right: &Expression) -> Result<String, EvaluationError> {
+        match operator.token_type {
+            TokenType::Slash => Ok(format!("{}", self.divide(left, right))),
+            TokenType::Star => Ok(format!("{}", self.multiply(left, right))),
             _ => Err(EvaluationError::InvalidExpression)
         }
     }
@@ -75,7 +100,7 @@ impl Evaluator {
             Expression::NumericLiteral { value } => self.numeric_literal(value.clone()),
             Expression::Grouping { expression: inner_expression} => self.evaluate_expression(inner_expression),
             Expression::Unary { operator, right } => self.unary(operator, right),
-            _ => Err(EvaluationError::InvalidExpression)
+            Expression::Binary { left, operator, right } => self.binary(left, operator, right)
         }
     }
 
