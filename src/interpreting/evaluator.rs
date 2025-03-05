@@ -80,7 +80,6 @@ impl Evaluator {
         (left,right)
     }
 
-    // Should probably update these to use pattern matching as well.  This will allow better error handling
     fn divide(&self, left: &Expression, right: &Expression) -> f64 {
         let (left, right) = self.get_numeric_values(left, right);
         left / right
@@ -97,14 +96,12 @@ impl Evaluator {
     }
 
     fn add(&self, left: &Expression, right: &Expression) -> Result<String, EvaluationError> {
-        match (left, right) {
-            (Expression::StringLiteral { value: left }, Expression::StringLiteral { value: right }) => {
-                Ok(format!("{}{}", left, right))
-            },
-            (Expression::NumericLiteral { value: left }, Expression::NumericLiteral { value: right }) => {
-                Ok(format!("{}", left + right))
-            }
-            _ => Err(EvaluationError::InvalidExpression)
+        let left = self.evaluate_expression(left)?;
+        let right = self.evaluate_expression(right)?;
+
+        match (left.parse::<f64>(), right.parse::<f64>()) {
+            (Ok(l), Ok(r)) => Ok(format!("{}", l + r)),
+            _ => Ok(format!("{}{}", left, right))
         }
     }
 

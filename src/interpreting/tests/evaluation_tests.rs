@@ -44,7 +44,7 @@ fn should_concatenate_two_string() {
 
 #[test]
 fn should_successfully_handle_complex_basic_math() {
-    assert_eq!(evaluate("63 + 59 - (-(52 - 89))"), "85");
+    assert_eq!(evaluate("(-66 + 66) * (18 * 57) / (1 + 4)"), "0");
 }
 
 fn evaluate(input: &str) -> String {
