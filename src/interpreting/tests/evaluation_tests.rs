@@ -65,3 +65,19 @@ fn should_successfully_negate_numeric_values() {
 
     assert_eq!(output, "false");
 }
+
+#[test]
+fn should_successfully_negate_nil_values() {
+    let input = "!nil";
+
+    let mut scanner = Scanner::new(String::from(input));
+    let tokens = scanner.scan_tokens().unwrap();
+
+    let parser = Parser::new(tokens);
+    let ast = parser.parse().unwrap();
+
+    let evaluator = Evaluator::new(ast);
+    let output = evaluator.evaluate().unwrap();
+
+    assert_eq!(output, "true");
+}

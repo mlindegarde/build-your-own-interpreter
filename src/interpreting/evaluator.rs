@@ -55,7 +55,7 @@ impl Evaluator {
     }
 
     fn is_truthy(&self, value: String) -> bool {
-        value != "false" && value != "0"
+        value != "false" && value != "0" && value != "nil"
     }
 
     fn unary(&self,  operator: &Token, right: &Expression) -> Result<String, EvaluationError> {
