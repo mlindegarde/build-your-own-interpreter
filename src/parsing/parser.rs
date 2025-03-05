@@ -106,7 +106,6 @@ impl Parser {
         Ok(expression)
     }
 
-
     fn term(&self, consumer: &mut Consumer) -> Result<Expression, ParsingError> {
         let mut expression = self.factor(consumer)?;
 

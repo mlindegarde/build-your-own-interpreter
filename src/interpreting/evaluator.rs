@@ -1,5 +1,6 @@
 use std::fmt;
 use exitcode::ExitCode;
+use crate::lexing::token::{Token, TokenType};
 use crate::parsing::expression::Expression;
 use crate::util::error_handling::ExitCodeProvider;
 
@@ -45,37 +46,35 @@ impl Evaluator {
         Self { ast }
     }
 
-    fn string_literal(&self, expression: &Expression) -> Result<String, EvaluationError> {
-        match expression {
-            Expression::StringLiteral { value } => Ok(String::from(value)),
-            _ => Err(EvaluationError::InvalidExpression)
-        }
+    fn string_literal(&self, value: &String) -> Result<String, EvaluationError> {
+        Ok(String::from(value))
     }
 
-    fn numeric_literal(&self, expression: &Expression) -> Result<String, EvaluationError> {
-        match expression {
-            Expression::NumericLiteral { value } => Ok(format!("{}", value)),
-            _ => Err(EvaluationError::InvalidExpression)
-        }
+    fn numeric_literal(&self, value: f64) -> Result<String, EvaluationError> {
+        Ok(format!("{}", value))
     }
 
-    /*
-    fn unary(&self,  expression: &Expression) -> Result<String, EvaluationError> {
-        match expression {
-            Expression::Unary { operator, right } => {
-                let right = self.evaluate_expression(right)?;
-                Ok(format!("{}{}", operator, right))
-            },
+    fn is_truthy(&self, value: String) -> bool {
+        value != "false" && value != "0"
+    }
+
+    fn unary(&self,  operator: &Token, right: &Expression) -> Result<String, EvaluationError> {
+        match operator.token_type {
+            TokenType::Minus => Ok(format!("-{}",  self.evaluate_expression(&right)?)),
+            TokenType::Bang => Ok(format!(
+                "{}",
+                !self.is_truthy(
+                    self.evaluate_expression(&right)?))),
             _ => Err(EvaluationError::InvalidExpression)
         }
     }
-    */
 
     fn evaluate_expression(&self, expression: &Expression) -> Result<String, EvaluationError> {
         match expression {
-            Expression::StringLiteral { value: _ } => self.string_literal(expression),
-            Expression::NumericLiteral { value: _ } => self.numeric_literal(expression),
+            Expression::StringLiteral { value } => self.string_literal(value),
+            Expression::NumericLiteral { value } => self.numeric_literal(value.clone()),
             Expression::Grouping { expression: inner_expression} => self.evaluate_expression(inner_expression),
+            Expression::Unary { operator, right } => self.unary(operator, right),
             _ => Err(EvaluationError::InvalidExpression)
         }
     }
