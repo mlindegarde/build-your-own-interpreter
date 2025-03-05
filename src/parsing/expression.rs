@@ -14,11 +14,11 @@ pub enum Expression {
 
 impl Expression {
     pub(crate) fn binary_from(left: Expression, operator: Token, right: Expression) -> Self {
-        Expression::Binary { left: Box::from(left), operator, right: Box::from(right) }
+        Expression::Binary { left: Box::from(left.clone()), operator, right: Box::from(right.clone()) }
     }
 
     pub(crate) fn unary_from(operator: Token, right: Expression) -> Self {
-        Expression::Unary { operator, right: Box::from(right) }
+        Expression::Unary { operator, right: Box::from(right.clone()) }
     }
 
     pub(crate) fn string_literal_from(value: &str) -> Self {
@@ -30,7 +30,7 @@ impl Expression {
     }
 
     pub(crate) fn grouping_from(expression: Expression) -> Self {
-        Expression::Grouping { expression: Box::from(expression) }
+        Expression::Grouping { expression: Box::from(expression.clone()) }
     }
 
     fn parenthesize(name: &str, expressions: Vec<&Expression>) -> String {

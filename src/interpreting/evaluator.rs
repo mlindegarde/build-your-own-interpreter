@@ -59,13 +59,6 @@ impl Evaluator {
         }
     }
 
-    fn grouping(&self, expression: &Expression) -> Result<String, EvaluationError> {
-        match expression {
-            Expression::Grouping { expression: inner_expression } => self.evaluate_expression(inner_expression),
-            _ => Err(EvaluationError::InvalidExpression)
-        }
-    }
-
     /*
     fn unary(&self,  expression: &Expression) -> Result<String, EvaluationError> {
         match expression {
@@ -82,7 +75,7 @@ impl Evaluator {
         match expression {
             Expression::StringLiteral { value: _ } => self.string_literal(expression),
             Expression::NumericLiteral { value: _ } => self.numeric_literal(expression),
-            Expression::Grouping { expression: inner_expression} => self.grouping(inner_expression),
+            Expression::Grouping { expression: inner_expression} => self.evaluate_expression(inner_expression),
             _ => Err(EvaluationError::InvalidExpression)
         }
     }

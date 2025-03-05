@@ -4,6 +4,7 @@ use crate::parsing::parser::Parser;
 use crate::util::error_handling::InterpreterError;
 
 pub mod evaluator;
+mod tests;
 
 pub fn evaluate_ast(filename: &str) -> Result<String, InterpreterError> {
     let file_contents = fs::read_to_string(filename).unwrap_or_else(|_| {

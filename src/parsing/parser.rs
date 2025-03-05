@@ -61,7 +61,6 @@ impl Parser {
             let previous_token = &self.tokens[(consumer.current_index-1) as usize];
 
             return match &previous_token.token_data {
-                //TokenData::StringLiteral { lexeme: _, literal } => Ok(Expression::StringLiteral { value: literal.clone() }),
                 TokenData::StringLiteral { lexeme: _, literal } => Ok(Expression::string_literal_from(literal)),
                 TokenData::NumericLiteral { lexeme: _, literal } => Ok(Expression::numeric_literal_from(literal.clone())),
                 _ => panic!("adf")
@@ -72,9 +71,7 @@ impl Parser {
             let expression = self.expression(consumer)?;
 
             return match consumer.consume(TokenType::RightParen, "Expect ')' after expression.") {
-                Ok(_) => {
-                    Ok(Expression::grouping_from(expression))
-                },
+                Ok(_) => Ok(Expression::grouping_from(expression)),
                 Err(_) => {
                     //cursor.error(cursor.peek(), "Expect ')' after expression.");
                     return Err(ParsingError::ExpectedExpression)
