@@ -99,14 +99,14 @@ impl Evaluator {
         }
     }
 
-    fn is_equal(left_result: &EvaluatorResult, right_result: &EvaluatorResult) -> Result<EvaluatorResult, EvaluationError> {
+    fn is_equal(left_result: &EvaluatorResult, right_result: &EvaluatorResult) -> bool {
         match (&left_result, &right_result) {
-            (EvaluatorResult::Nil, EvaluatorResult::Nil) => Ok(Boolean(true)),
-            (EvaluatorResult::Nil, _) => Ok(Boolean(false)),
-            (Numeric(left), Numeric(right)) => Ok(Boolean(left == right)),
-            (Boolean(left), Boolean(right)) => Ok(Boolean(left == right)),
-            (EvaluatorResult::String(left), EvaluatorResult::String(right)) => Ok(Boolean(left == right)),
-            _ => Ok(Boolean(false))
+            (EvaluatorResult::Nil, EvaluatorResult::Nil) => true,
+            (EvaluatorResult::Nil, _) => false,
+            (Numeric(left), Numeric(right)) => left == right,
+            (Boolean(left), Boolean(right)) => left == right,
+            (EvaluatorResult::String(left), EvaluatorResult::String(right)) => left == right,
+            _ => false
         }
     }
 
@@ -128,8 +128,8 @@ impl Evaluator {
             (Numeric(left), Numeric(right), LessEqual) => Ok(Boolean(left <= right)),
 
             // Equality operations
-            (left, right, TokenType::BangEqual) => !Self::is_equal(left, right),
-            (left, right, TokenType::EqualEqual) => Self::is_equal(left, right),
+            (left, right, TokenType::BangEqual) => Ok(Boolean(!Self::is_equal(left, right))),
+            (left, right, TokenType::EqualEqual) => Ok(Boolean(Self::is_equal(left, right))),
 
             // String operations
             (EvaluatorResult::String(left), EvaluatorResult::String(right), Plus) =>
