@@ -2,7 +2,7 @@ use std::fmt;
 use exitcode::ExitCode;
 use crate::interpreting::evaluator::EvaluatorResult::{Boolean, Numeric};
 use crate::lexing::token::{Token, TokenType};
-use crate::lexing::token::TokenType::{Minus, Plus, Slash, Star};
+use crate::lexing::token::TokenType::{Minus, Plus, Slash, Star, Greater, GreaterEqual, Less, LessEqual};
 use crate::parsing::expression::Expression;
 use crate::util::error_handling::ExitCodeProvider;
 
@@ -109,6 +109,10 @@ impl Evaluator {
             (Numeric(left), Numeric(right), Star) => Ok(Numeric(left * right)),
             (Numeric(left), Numeric(right), Minus) => Ok(Numeric(left - right)),
             (Numeric(left), Numeric(right), Plus) => Ok(Numeric(left + right)),
+            (Numeric(left), Numeric(right), Greater) => Ok(Boolean(left > right)),
+            (Numeric(left), Numeric(right), GreaterEqual) => Ok(Boolean(left >= right)),
+            (Numeric(left), Numeric(right), Less) => Ok(Boolean(left < right)),
+            (Numeric(left), Numeric(right), LessEqual) => Ok(Boolean(left <= right)),
 
             // String operations
             (EvaluatorResult::String(left), EvaluatorResult::String(right), Plus) =>
