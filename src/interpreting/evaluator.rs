@@ -11,14 +11,16 @@ use crate::util::error_handling::ExitCodeProvider;
 #[derive(Debug)]
 pub enum EvaluationError {
     InvalidExpression,
-    NumericOperandRequired
+    NumericOperandRequired,
+    NumericOperandsRequired
 }
 
 impl fmt::Display for EvaluationError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             EvaluationError::InvalidExpression => write!(f, "Invalid expression"),
-            EvaluationError::NumericOperandRequired => write!(f, "Operand must be a number.")
+            EvaluationError::NumericOperandRequired => write!(f, "Operand must be a number."),
+            EvaluationError::NumericOperandsRequired => write!(f, "Operands must be numbers.")
         }
     }
 }
@@ -35,7 +37,8 @@ impl ExitCodeProvider for EvaluationError {
     fn get_exit_code(&self) -> ExitCode {
         match self {
             EvaluationError::InvalidExpression => 70,
-            EvaluationError::NumericOperandRequired => 70
+            EvaluationError::NumericOperandRequired => 70,
+            EvaluationError::NumericOperandsRequired => 70
         }
     }
 }
@@ -121,7 +124,9 @@ impl Evaluator {
         match (&left_result, &right_result, &operator.token_type) {
             // Numeric operations
             (Numeric(left), Numeric(right), Slash) => Ok(Numeric(left / right)),
+            (_, _, Slash) => Err(EvaluationError::NumericOperandsRequired),
             (Numeric(left), Numeric(right), Star) => Ok(Numeric(left * right)),
+            (_, _, Star) => Err(EvaluationError::NumericOperandsRequired),
             (Numeric(left), Numeric(right), Minus) => Ok(Numeric(left - right)),
             (Numeric(left), Numeric(right), Plus) => Ok(Numeric(left + right)),
 
