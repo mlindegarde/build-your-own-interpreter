@@ -121,7 +121,7 @@ fn execute_command(command: Command, filename: &str) -> Result<String, Interpret
     match command {
         Command::Tokenize => tokenize_file(filename).inspect_err(|error| handle_error(error)),
         Command::Parse => build_abstract_syntax_tree(filename),
-        Command::Evaluate => evaluate_ast(filename)
+        Command::Evaluate => evaluate_ast(filename).inspect_err(|error| handle_error(error))
     }
 }
 

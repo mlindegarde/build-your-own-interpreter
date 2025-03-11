@@ -10,13 +10,15 @@ use crate::util::error_handling::ExitCodeProvider;
 
 #[derive(Debug)]
 pub enum EvaluationError {
-    InvalidExpression
+    InvalidExpression,
+    NumericOperandRequired
 }
 
 impl fmt::Display for EvaluationError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            EvaluationError::InvalidExpression => write!(f, "Invalid expression")
+            EvaluationError::InvalidExpression => write!(f, "Invalid expression"),
+            EvaluationError::NumericOperandRequired => write!(f, "Operand must be a number.")
         }
     }
 }
@@ -32,7 +34,8 @@ impl ExitCodeProvider for EvaluationError {
 
     fn get_exit_code(&self) -> ExitCode {
         match self {
-            EvaluationError::InvalidExpression => 1
+            EvaluationError::InvalidExpression => 70,
+            EvaluationError::NumericOperandRequired => 70
         }
     }
 }
@@ -94,6 +97,7 @@ impl Evaluator {
 
         match (operator.token_type, &right_result) {
             (Minus, Numeric(value)) => Ok(Numeric(-value)),
+            (Minus, _) => Err(EvaluationError::NumericOperandRequired),
             (TokenType::Bang, _) => Ok(Boolean(!Self::is_truthy(right_result))),
             _ => Err(EvaluationError::InvalidExpression)
         }
