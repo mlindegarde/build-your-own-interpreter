@@ -128,6 +128,7 @@ impl Evaluator {
             (Numeric(left), Numeric(right), Star) => Ok(Numeric(left * right)),
             (_, _, Star) => Err(EvaluationError::NumericOperandsRequired),
             (Numeric(left), Numeric(right), Minus) => Ok(Numeric(left - right)),
+            (_, _, Minus) => Err(EvaluationError::NumericOperandsRequired),
             (Numeric(left), Numeric(right), Plus) => Ok(Numeric(left + right)),
 
             // Comparison operations
@@ -143,6 +144,7 @@ impl Evaluator {
             // String operations
             (EvaluatorResult::String(left), EvaluatorResult::String(right), Plus) =>
                 Ok(EvaluatorResult::String(format!("{}{}", left, right))),
+            (_, _, Plus) => Err(EvaluationError::NumericOperandsRequired),
 
             // Invalid
             _ => Err(EvaluationError::InvalidExpression)
