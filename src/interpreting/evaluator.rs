@@ -133,9 +133,13 @@ impl Evaluator {
 
             // Comparison operations
             (Numeric(left), Numeric(right), Greater) => Ok(Boolean(left > right)),
+            (_, _, Greater) => Err(EvaluationError::NumericOperandsRequired),
             (Numeric(left), Numeric(right), GreaterEqual) => Ok(Boolean(left >= right)),
+            (_, _, GreaterEqual) => Err(EvaluationError::NumericOperandsRequired),
             (Numeric(left), Numeric(right), Less) => Ok(Boolean(left < right)),
+            (_, _, Less) => Err(EvaluationError::NumericOperandsRequired),
             (Numeric(left), Numeric(right), LessEqual) => Ok(Boolean(left <= right)),
+            (_, _, LessEqual) => Err(EvaluationError::NumericOperandsRequired),
 
             // Equality operations
             (left, right, TokenType::BangEqual) => Ok(Boolean(!Self::is_equal(left, right))),
