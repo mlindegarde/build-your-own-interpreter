@@ -99,6 +99,17 @@ impl Evaluator {
         }
     }
 
+    fn is_equal(left_result: &EvaluatorResult, right_result: &EvaluatorResult) -> Result<EvaluatorResult, EvaluationError> {
+        match (&left_result, &right_result) {
+            (EvaluatorResult::Nil, EvaluatorResult::Nil) => Ok(Boolean(true)),
+            (EvaluatorResult::Nil, _) => Ok(Boolean(false)),
+            (Numeric(left), Numeric(right)) => Ok(Boolean(left == right)),
+            (Boolean(left), Boolean(right)) => Ok(Boolean(left == right)),
+            (EvaluatorResult::String(left), EvaluatorResult::String(right)) => Ok(Boolean(left == right)),
+            _ => Ok(Boolean(false))
+        }
+    }
+
     fn binary(&self, left: &Expression, operator: &Token, right: &Expression) -> Result<EvaluatorResult, EvaluationError> {
         let left_result = self.evaluate_expression(left)?;
         let right_result = self.evaluate_expression(right)?;
@@ -109,10 +120,16 @@ impl Evaluator {
             (Numeric(left), Numeric(right), Star) => Ok(Numeric(left * right)),
             (Numeric(left), Numeric(right), Minus) => Ok(Numeric(left - right)),
             (Numeric(left), Numeric(right), Plus) => Ok(Numeric(left + right)),
+
+            // Comparison operations
             (Numeric(left), Numeric(right), Greater) => Ok(Boolean(left > right)),
             (Numeric(left), Numeric(right), GreaterEqual) => Ok(Boolean(left >= right)),
             (Numeric(left), Numeric(right), Less) => Ok(Boolean(left < right)),
             (Numeric(left), Numeric(right), LessEqual) => Ok(Boolean(left <= right)),
+
+            // Equality operations
+            (left, right, TokenType::BangEqual) => !Self::is_equal(left, right),
+            (left, right, TokenType::EqualEqual) => Self::is_equal(left, right),
 
             // String operations
             (EvaluatorResult::String(left), EvaluatorResult::String(right), Plus) =>
