@@ -132,9 +132,7 @@ impl Scanner {
         } as usize;
 
         let start_index = self.source.char_indices().nth(start).map(|(index, _)| index).unwrap_or(0);
-        let end_index = self.source.char_indices().nth(end).map(|(index, _)| index).unwrap_or(0);
-
-        if end_index == 0 { return ""; }
+        let end_index = self.source.char_indices().nth(end).map(|(index, _)| index).unwrap_or(self.source.len());
 
         &self.source[start_index .. end_index]
     }
