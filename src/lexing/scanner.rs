@@ -131,7 +131,12 @@ impl Scanner {
             Trim::Both => consumer.current_char - 1
         } as usize;
 
-        &self.source[start .. end]
+        let start_index = self.source.char_indices().nth(start).map(|(index, b)| index).unwrap_or(0);
+        let end_index = self.source.char_indices().nth(end).map(|(index, _)| index).unwrap_or(0);
+
+        if end_index == 0 { return ""; }
+
+        &self.source[start_index .. end_index]
     }
 
     fn build_token(&self, token_type: TokenType, token_data: TokenData, consumer: &Consumer) -> Token {
