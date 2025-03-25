@@ -36,7 +36,7 @@ impl ExitCodeProvider for ParsingError {
     }
     fn get_exit_code(&self) -> ExitCode {
         match self {
-            ParsingError::ExpectedExpression => ExitCode::from(70),
+            ParsingError::ExpectedExpression => ExitCode::from(65),
             ParsingError::UnexpectedToken => ExitCode::from(65)
         }
     }
