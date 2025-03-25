@@ -7,6 +7,7 @@ pub mod parser;
 pub mod tests;
 pub mod consumer;
 pub mod expression;
+pub mod statement;
 
 pub fn build_abstract_syntax_tree(filename: &str) -> Result<String, InterpreterError> {
     let file_contents = fs::read_to_string(filename).unwrap_or_else(|_| {
@@ -18,7 +19,7 @@ pub fn build_abstract_syntax_tree(filename: &str) -> Result<String, InterpreterE
     let tokens = scanner.scan_tokens()?;
 
     let parser = Parser::new(tokens);
-    let ast = parser.parse()?;
+    let ast = parser.parse_ast()?;
 
     Ok(format!("{}", ast))
 }

@@ -66,11 +66,11 @@ impl fmt::Display for EvaluatorResult {
 //** EVALUATOR *********************************************************************************************************
 
 pub struct Evaluator {
-    pub ast: Expression
+    pub ast: Option<Expression>
 }
 
 impl Evaluator {
-    pub fn new(ast: Expression) -> Self {
+    pub fn new(ast: Option<Expression>) -> Self {
         Self { ast }
     }
 
@@ -155,7 +155,7 @@ impl Evaluator {
         }
     }
 
-    fn evaluate_expression(&self, expression: &Expression) -> Result<EvaluatorResult, EvaluationError> {
+    pub fn evaluate_expression(&self, expression: &Expression) -> Result<EvaluatorResult, EvaluationError> {
         match expression {
             Expression::StringLiteral { value } => self.string_literal(value),
             Expression::NumericLiteral { value } => self.numeric_literal(value.clone()),
@@ -166,7 +166,12 @@ impl Evaluator {
     }
 
     pub fn evaluate(&self) -> Result<String, EvaluationError> {
-        let output = self.evaluate_expression(&self.ast)?;
-        Ok(format!("{}", output))
+        match &self.ast {
+            Some(ast) => {
+                let output = self.evaluate_expression(ast)?;
+                Ok(format!("{}", output))
+            },
+            None => Err(EvaluationError::InvalidExpression)
+        }
     }
 }

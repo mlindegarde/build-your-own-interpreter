@@ -1,8 +1,11 @@
 use crate::lexing::token::{Token, TokenData, TokenType};
 use exitcode::ExitCode;
 use std::{fmt};
+use crate::lexing::token::TokenType::Semicolon;
 use crate::parsing::consumer::Consumer;
 use crate::parsing::expression::Expression;
+use crate::parsing::statement::Statement;
+use crate::parsing::statement::Statement::{ExpressionStmt, PrintStmt};
 use crate::util::error_handling::{ExitCodeProvider};
 
 //** PARSING ERRORS ****************************************************************************************************
@@ -149,9 +152,42 @@ impl Parser {
         self.equality(consumer)
     }
 
-    pub fn parse(&self) -> Result<Expression, ParsingError> {
+    pub fn parse_ast(&self) -> Result<Expression, ParsingError> {
         let mut consumer = Consumer::new(&self.tokens);
 
         self.expression(&mut consumer)
+    }
+
+    fn print_statement(&self, consumer: &mut Consumer) -> Result<Statement, ParsingError> {
+        let value = self.expression(consumer)?;
+
+        consumer.consume(Semicolon, "Expect ';' after value.")?;
+        Ok(PrintStmt { expression: value })
+    }
+
+    fn expression_statement(&self, consumer: &mut Consumer) -> Result<Statement, ParsingError> {
+        let expression = self.expression(consumer)?;
+
+        consumer.consume(Semicolon, "Expect ';' after expression.")?;
+        Ok(ExpressionStmt { expression })
+    }
+
+    fn statement(&self, consumer: &mut Consumer) -> Result<Statement, ParsingError> {
+        if consumer.match_token_type(vec![TokenType::Print]) {
+            return self.print_statement(consumer);
+        }
+
+        self.expression_statement(consumer)
+    }
+
+    pub fn parse(&self) -> Result<Vec<Statement>, ParsingError> {
+        let mut consumer = Consumer::new(&self.tokens);
+        let mut statements = Vec::new();
+
+        while !consumer.is_at_end() {
+            statements.push(self.statement(&mut consumer)?);
+        }
+
+        Ok(statements)
     }
 }

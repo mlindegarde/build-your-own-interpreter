@@ -52,8 +52,8 @@ fn evaluate(input: &str) -> String {
     let tokens = scanner.scan_tokens().unwrap();
 
     let parser = Parser::new(tokens);
-    let ast = parser.parse().unwrap();
+    let ast = parser.parse_ast().unwrap();
 
-    let evaluator = Evaluator::new(ast);
+    let evaluator = Evaluator::new(Some(ast));
     evaluator.evaluate().unwrap()
 }

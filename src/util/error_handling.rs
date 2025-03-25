@@ -10,6 +10,7 @@ pub trait ExitCodeProvider {
     fn get_exit_code(&self) -> ExitCode;
 }
 
+#[derive(Debug)]
 pub struct InterpreterError {
     pub output: Option<String>,
     pub error_details: Option<String>,

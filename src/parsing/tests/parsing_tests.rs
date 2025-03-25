@@ -37,7 +37,7 @@ fn should_generate_the_correct_ast_for_numeric_comparison() {
     let tokens = scanner.scan_tokens().unwrap();
 
     let parser = Parser::new(tokens);
-    let ast = &parser.parse().unwrap();
+    let ast = &parser.parse_ast().unwrap();
 
     let ast_as_string = format!("{}", ast);
 
@@ -53,7 +53,7 @@ fn should_generate_the_correct_ast_for_string_comparison() {
     let tokens = scanner.scan_tokens().unwrap();
 
     let parser = Parser::new(tokens);
-    let ast = &parser.parse().unwrap();
+    let ast = &parser.parse_ast().unwrap();
 
     let ast_as_string = format!("{}", ast);
 
@@ -69,7 +69,7 @@ fn should_generate_the_correct_ast_given_simple_bang_equals() {
     let tokens = scanner.scan_tokens().unwrap();
 
     let parser = Parser::new(tokens);
-    let ast = &parser.parse().unwrap();
+    let ast = &parser.parse_ast().unwrap();
 
     let ast_as_string = format!("{}", ast);
 
@@ -84,7 +84,23 @@ fn should_handle_parsing_error() {
     let tokens = scanner.scan_tokens().unwrap();
 
     let parser = Parser::new(tokens);
-    let result = &parser.parse();
+    let result = &parser.parse_ast();
 
     assert_eq!(result.is_err(), true);
+}
+
+#[test]
+fn should_generate_the_expected_number_of_statements() {
+    let input = r##"
+        print "Hello, World!";
+        print "Goodbye, World!";
+        "##;
+
+    let mut scanner = Scanner::new(String::from(input));
+    let tokens = scanner.scan_tokens().unwrap();
+
+    let parser = Parser::new(tokens);
+    let result = &parser.parse().unwrap();
+
+    assert_eq!(result.len(), 2);
 }

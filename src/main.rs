@@ -10,8 +10,8 @@ use std::str::FromStr;
 use std::{env, fmt};
 use std::process::{exit};
 use crate::lexing::tokenize_file;
-use crate::parsing::build_abstract_syntax_tree;
-use crate::interpreting::evaluate_ast;
+use crate::parsing::{build_abstract_syntax_tree};
+use crate::interpreting::{evaluate_ast, interpret_program};
 use crate::util::error_handling::{ExitCodeProvider, InterpreterError};
 
 //** VALIDATION ERRORS *************************************************************************************************
@@ -61,7 +61,8 @@ impl ExitCodeProvider for ValidationError {
 enum Command {
     Tokenize,
     Parse,
-    Evaluate
+    Evaluate,
+    Run
 }
 
 /// FromStr does not have a lifetime parameter.  As a result, it can only parse types that
@@ -76,6 +77,7 @@ impl FromStr for Command {
             "tokenize" => Ok(Command::Tokenize),
             "parse" => Ok(Command::Parse),
             "evaluate" => Ok(Command::Evaluate),
+            "run" => Ok(Command::Run),
             _ => Err(ValidationError::Command { provided_command: input.to_string()})
         }
     }
@@ -121,7 +123,8 @@ fn execute_command(command: Command, filename: &str) -> Result<String, Interpret
     match command {
         Command::Tokenize => tokenize_file(filename).inspect_err(|error| handle_error(error)),
         Command::Parse => build_abstract_syntax_tree(filename),
-        Command::Evaluate => evaluate_ast(filename).inspect_err(|error| handle_error(error))
+        Command::Evaluate => evaluate_ast(filename).inspect_err(|error| handle_error(error)),
+        Command::Run => interpret_program(filename).inspect_err(|error| handle_error(error))
     }
 }
 
